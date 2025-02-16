@@ -95,30 +95,273 @@ interface ExampleCard {
 
 #### 3.3 文档系统
 ```markdown
-要求每个MDX文档包含：
+每个 MDX 文档必须包含以下结构：
+
+1. 文档元数据（frontmatter）
 ---
-exampleId: demo1
-relatedComponents: 
-  - /components/FormValidator
-dependencies:
-  - react-hook-form@7.4.0
+exampleId: example-id           # 示例的唯一标识符
+title: "示例标题"               # 示例的中文标题
+description: "示例描述"         # 简短的示例描述
+difficulty: 1                   # 难度等级：1(入门) - 5(高级)
+category: "分类"               # 主要分类，如：hooks, components, patterns
+tags: ["标签1", "标签2"]       # 相关标签
+relatedComponents:             # 相关组件路径
+  - /app/lab/[exampleId]/demo/example
+dependencies:                  # 依赖项及版本
+  - react@19.0.0
 ---
 
+2. 文档结构
+# 主标题
+
+## 为什么需要？
+解释这个功能的使用场景和解决的问题
+
 ## 核心概念
-{内容...}
+详细解释关键概念和工作原理
 
 ## 实现步骤
 ```jsx live=true
-// 自动关联示例代码
+// 可交互的代码示例
 function Demo() {
   return <ExampleComponent />
 }
 ```
 
+## 使用说明
+基本用法说明
+
+## 进阶用法（可选）
+展示高级特性和用法
+
+## 注意事项
+常见陷阱和解决方案
+
 ## 常见问题
 <FAQ 
-  questions={[...]}
+  questions={[
+    {
+      q: "问题描述",
+      a: "详细解答"
+    }
+  ]}
 />
+
+## 最佳实践
+展示推荐的使用方式，以及不推荐的用法对比
+
+## 相关资源
+- 相关文档链接
+- 进一步学习资源
+
+## 下一步学习
+推荐的后续学习主题
+
+3. 文档编写规范
+- 使用中文编写，确保语言通俗易懂
+- 代码示例要简洁且实用
+- 使用 ✅/❌ 标识推荐和不推荐的做法
+- 关键概念要加粗或使用代码块标注
+- 示例代码需要添加注释
+- 涉及的 API 要链接到官方文档
+
+4. 交互式组件
+- FAQ：问答组件
+- CodePlayground：代码演示组件
+- Alert：警告提示组件
+- Tip：提示组件
+
+5. 文档质量检查清单
+- [ ] 元数据完整性
+- [ ] 结构完整性
+- [ ] 示例可运行性
+- [ ] 代码注释完整性
+- [ ] 中文语言准确性
+- [ ] 相关资源有效性
+```
+
+#### 3.4 示例代码规范
+
+```markdown
+每个示例代码文件必须遵循以下规范：
+
+1. 文件结构
+- 使用 TypeScript 编写
+- 遵循 'use client' 指令
+- 按功能分割成多个子组件
+- 导出一个主组件作为入口
+
+2. 示例组织
+- 每个示例都应该是独立的、可交互的组件
+- 包含完整的说明文字
+- 展示关键代码片段
+- 提供实际可操作的 UI
+
+3. 代码展示
+- 使用卡片布局包装每个示例
+- 清晰的标题和描述
+- 关键代码片段使用代码块展示
+- 代码片段要简洁且有注释
+
+4. 说明文档结构
+- 标题：说明示例用途
+- 描述：解释示例要点
+- 要点列表：使用无序列表
+- 代码片段：使用代码块
+
+5. 交互设计
+- 提供清晰的操作按钮
+- 显示即时反馈
+- 处理错误情况
+- 添加加载状态
+
+6. 样式规范
+- 使用 Tailwind CSS 类名
+- 保持一致的间距和边距
+- 使用合适的颜色对比度
+- 响应式设计
+
+7. 代码质量
+- 使用 TypeScript 类型
+- 添加适当的注释
+- 处理边缘情况
+- 实现错误处理
+
+8. 辅助功能
+- 语义化 HTML 结构
+- 适当的 ARIA 属性
+- 键盘可访问性
+- 屏幕阅读器支持
+
+示例代码模板：
+
+```tsx
+'use client';
+
+import React, { useState } from 'react';
+import { Card } from '@/components/ui/card';
+
+const ExampleComponent = () => {
+  // 状态定义
+  const [state, setState] = useState(initialValue);
+
+  // 事件处理
+  const handleEvent = () => {
+    // 处理逻辑
+  };
+
+  return (
+    <Card className="p-4 space-y-4">
+      <h3 className="text-lg font-bold">示例标题</h3>
+      
+      {/* 说明部分 */}
+      <div className="space-y-2">
+        <p className="text-sm text-gray-500">
+          示例说明文字
+        </p>
+        <ul className="list-disc pl-5 space-y-1 text-sm text-gray-500">
+          <li>要点 1</li>
+          <li>要点 2</li>
+          <li>要点 3</li>
+        </ul>
+        
+        {/* 代码展示 */}
+        <div className="bg-gray-50 p-3 rounded text-sm">
+          <code>{代码片段}</code>
+        </div>
+      </div>
+
+      {/* 交互部分 */}
+      <div className="bg-white p-4 rounded-lg border">
+        {/* 交互内容 */}
+      </div>
+    </Card>
+  );
+};
+
+export default ExampleComponent;
+```
+```
+
+#### 3.5 代码展示规范
+
+```markdown
+1. 代码高亮组件
+- 使用 react-syntax-highlighter 进行代码高亮
+- 采用 VSCode Dark Plus 主题
+- 支持 TypeScript 语法高亮
+
+2. 代码片段要求
+- 展示完整的功能代码
+- 包含必要的类型定义
+- 添加清晰的注释说明
+- 展示最佳实践和注意事项
+
+3. 组件封装
+- 使用统一的 Markdown 组件
+- 保持一致的样式风格
+- 支持自定义类名扩展
+- 确保响应式适配
+
+4. 视觉呈现
+- 使用合适的字体大小
+- 保持适当的内边距
+- 添加圆角边框
+- 使用衬托的背景色
+
+5. 代码结构
+- 按功能组织代码片段
+- 突出关键实现部分
+- 省略非必要的样板代码
+- 保持代码简洁清晰
+
+示例代码：
+
+```tsx
+// Markdown 组件实现
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+
+interface MarkdownProps {
+  children: string;
+  className?: string;
+}
+
+export const Markdown: React.FC<MarkdownProps> = ({ children, className }) => {
+  return (
+    <div className={className}>
+      <SyntaxHighlighter
+        language="typescript"
+        style={vscDarkPlus}
+        customStyle={{
+          margin: 0,
+          padding: '1rem',
+          borderRadius: '0.375rem',
+          fontSize: '0.875rem',
+        }}
+      >
+        {children}
+      </SyntaxHighlighter>
+    </div>
+  );
+};
+
+// 使用示例
+const ExampleComponent = () => {
+  const codeString = `const [state, setState] = useState(initialValue);
+// 更新状态
+setState(newValue);`;
+
+  return (
+    <div className="space-y-4">
+      <h3>示例标题</h3>
+      <Markdown className="bg-gray-50 rounded">
+        {codeString}
+      </Markdown>
+    </div>
+  );
+};
+```
 ```
 
 ### 4. 开发流程规范

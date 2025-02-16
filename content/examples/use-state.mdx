@@ -1,0 +1,44 @@
+---
+title: "理解 useState 钩子"
+description: "学习如何使用 useState 钩子来管理函数组件中的状态。"
+---
+
+# useState 钩子
+
+useState 是 React 中用于在函数组件中添加状态的 Hook。它允许你在组件中声明状态变量，并提供一个函数来更新这些变量。
+
+## 使用示例
+
+```jsx
+import React, { useState } from 'react';
+
+function Example() {
+  // 声明一个新的状态变量，称为 "count"
+  const [count, setCount] = useState(0);
+
+  return (
+    <div>
+      <p>你点击了 {count} 次</p>
+      <button onClick={() => setCount(count + 1)}>
+        点击我
+      </button>
+    </div>
+  );
+}
+```
+
+## 说明
+
+- `useState` 返回一个数组，第一个元素是当前状态值，第二个元素是更新状态的函数。
+- 可以在组件中多次调用 `useState` 来管理多个状态变量。
+
+## 注意事项
+
+- 状态更新是异步的，多个状态更新可能会被批处理。
+- 确保在组件的顶层调用 Hook，不能在循环、条件或嵌套函数中调用。
+
+## 实践建议
+
+- 使用解构赋值从 `useState` 中提取状态和更新函数。
+- 为状态变量提供有意义的名称，以便代码更易于理解。
+- 结合 `useEffect` 等其他 Hook，构建更复杂的状态逻辑。

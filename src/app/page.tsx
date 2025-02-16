@@ -97,7 +97,9 @@ const Page: React.FC = () => {
       <div className="flex-1 container py-6 px-6">
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {examples.slice((currentPage - 1) * 6, currentPage * 6).map((example) => (
-            <ExampleCardComponent key={example.id} example={example} />
+            <a href={`/lab/${example.id}`} key={example.id} className="block">
+              <ExampleCardComponent example={example} />
+            </a>
           ))}
         </div>
       </div>
