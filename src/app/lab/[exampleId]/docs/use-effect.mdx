@@ -1,0 +1,156 @@
+# useEffect Hook
+
+`useEffect` 是 React 中用于处理副作用的 Hook。副作用包括：数据获取、订阅、手动修改 DOM 等。
+
+## 基本概念
+
+### 什么是副作用？
+
+副作用是指那些可能影响其他组件并且不能在渲染期间完成的操作：
+- API 调用
+- 订阅数据源
+- 修改 DOM
+- 设置定时器
+- 存储数据
+
+### 语法
+
+```typescript
+useEffect(setup, dependencies?)
+```
+
+- `setup`: 包含副作用逻辑的函数
+- `dependencies`: 可选的依赖项数组
+
+## 使用场景
+
+### 1. 基础副作用
+
+最简单的副作用示例，比如修改文档标题：
+
+```typescript
+useEffect(() => {
+  document.title = `计数: ${count}`;
+}, [count]);
+```
+
+### 2. 清理副作用
+
+当需要清理副作用时（比如取消订阅、清除定时器），返回一个清理函数：
+
+```typescript
+useEffect(() => {
+  const subscription = dataSource.subscribe();
+  
+  // 清理函数
+  return () => {
+    subscription.unsubscribe();
+  };
+}, [dataSource]);
+```
+
+### 3. 数据获取
+
+处理异步数据获取：
+
+```typescript
+useEffect(() => {
+  let ignore = false;
+  
+  async function fetchData() {
+    const result = await api.getData();
+    if (!ignore) {
+      setData(result);
+    }
+  }
+  
+  fetchData();
+  return () => { ignore = true; };
+}, []);
+```
+
+### 4. 事件监听
+
+添加和移除事件监听器：
+
+```typescript
+useEffect(() => {
+  const handler = (event) => {
+    console.log(event);
+  };
+  
+  window.addEventListener('resize', handler);
+  return () => window.removeEventListener('resize', handler);
+}, []);
+```
+
+## 最佳实践
+
+### 1. 依赖数组的使用
+
+```typescript
+// ✅ 所有依赖都已声明
+useEffect(() => {
+  console.log(`${firstName} ${lastName}`);
+}, [firstName, lastName]);
+
+// ❌ 缺少依赖项
+useEffect(() => {
+  console.log(`${firstName} ${lastName}`);
+}, []); // 应该包含 firstName 和 lastName
+```
+
+### 2. 条件执行
+
+```typescript
+// ✅ 使用条件语句控制副作用
+useEffect(() => {
+  if (isEnabled) {
+    // 执行副作用
+  }
+}, [isEnabled]);
+
+// ❌ 不要在 useEffect 外使用条件语句
+if (isEnabled) {
+  useEffect(() => {
+    // 这是错误的
+  });
+}
+```
+
+### 3. 避免无限循环
+
+```typescript
+// ✅ 正确的依赖处理
+useEffect(() => {
+  setFormattedData(formatData(data));
+}, [data]); // 仅在 data 变化时执行
+
+// ❌ 可能导致无限循环
+useEffect(() => {
+  setData(newData); // 如果在依赖中包含 data，会导致无限循环
+}, [data]);
+```
+
+## 常见问题
+
+### 1. 依赖项问题
+
+问题：副作用函数使用了未在依赖数组中声明的值。
+解决：添加所有必要的依赖，或重构代码以移除不必要的依赖。
+
+### 2. 清理问题
+
+问题：未正确清理副作用导致内存泄漏。
+解决：返回清理函数以取消订阅或清理资源。
+
+### 3. 竞态条件
+
+问题：异步操作可能以错误的顺序完成。
+解决：使用清理函数或标志位来处理过期的请求。
+
+## 相关资源
+
+- [React 官方文档 - useEffect](https://react.dev/reference/react/useEffect)
+- [使用 Effect Hook](https://react.dev/learn/synchronizing-with-effects)
+- [你可能不需要 Effect](https://react.dev/learn/you-might-not-need-an-effect)

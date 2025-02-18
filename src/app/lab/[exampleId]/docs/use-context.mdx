@@ -1,0 +1,127 @@
+# useContext 钩子
+
+useContext 是 React 的一个内置 Hook，它让你可以订阅 React context 的变化。这个功能对于在组件树中共享数据非常有用，而不必通过 props 层层传递。
+
+## 基本概念
+
+### Context 是什么？
+
+Context 提供了一种在组件树中共享数据的方式，而不必显式地通过组件树的逐层传递 props。这对于需要被很多组件访问的全局数据来说非常有用，比如：
+
+- 当前认证的用户信息
+- 主题设置
+- 首选语言
+- 全局状态管理
+
+### useContext 的使用步骤
+
+1. 创建 Context
+```tsx
+const MyContext = createContext(defaultValue);
+```
+
+2. 提供 Context
+```tsx
+<MyContext.Provider value={/* 某个值 */}>
+  {/* 子组件 */}
+</MyContext.Provider>
+```
+
+3. 消费 Context
+```tsx
+const value = useContext(MyContext);
+```
+
+## 示例讲解
+
+在我们的示例中，我们实现了两个常见的使用场景：主题切换和多语言支持。
+
+### 1. 创建 Context
+
+首先，我们为主题和语言分别创建了 Context：
+
+```tsx
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+```
+
+### 2. 创建 Provider 组件
+
+然后，我们创建了对应的 Provider 组件来管理状态：
+
+```tsx
+const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [isDark, setIsDark] = useState(false);
+  const toggleTheme = () => setIsDark(!isDark);
+
+  return (
+    <ThemeContext.Provider value={{ isDark, toggleTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+};
+```
+
+### 3. 自定义 Hook
+
+为了更好地复用和封装逻辑，我们创建了自定义 Hook：
+
+```tsx
+const useTheme = () => {
+  const context = useContext(ThemeContext);
+  if (context === undefined) {
+    throw new Error('useTheme 必须在 ThemeProvider 内部使用');
+  }
+  return context;
+};
+```
+
+### 4. 在组件中使用
+
+最后，在组件中使用这些 Context：
+
+```tsx
+const Content = () => {
+  const { isDark } = useTheme();
+  const { language } = useLanguage();
+  // ...
+};
+```
+
+## 最佳实践
+
+1. **适度使用**
+   - Context 主要用于共享全局数据
+   - 不要过度使用，可能会导致组件重用性降低
+
+2. **合理拆分**
+   - 将不同领域的 Context 分开
+   - 避免一个 Context 承载太多数据
+
+3. **性能优化**
+   - 考虑使用 Context 分割
+   - 避免不必要的重渲染
+
+4. **错误处理**
+   - 为自定义 Hook 添加错误检查
+   - 提供有意义的错误信息
+
+## 常见问题
+
+1. **Context 的值改变时，所有消费该 Context 的组件都会重新渲染**
+   - 解决：使用 useMemo 或 useCallback 来优化
+
+2. **在错误的层级使用 Context**
+   - 确保 Provider 包裹了所有需要访问 Context 的组件
+
+3. **忘记提供 Provider**
+   - 总是确保在使用 Context 的组件外层有对应的 Provider
+
+4. **Context 值频繁变化**
+   - 考虑将经常变化的值和不经常变化的值分开到不同的 Context
+
+## 相关资源
+
+- [React 官方文档 - useContext](https://react.dev/reference/react/useContext)
+- [React 官方文档 - Context](https://react.dev/learn/passing-data-deeply-with-context)
+- [React Context 性能优化](https://react.dev/reference/react/useContext#optimizing-re-renders-when-passing-objects-and-functions)
