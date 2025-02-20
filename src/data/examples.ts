@@ -73,4 +73,22 @@ export const examples: ExampleCard[] = [
     tags: ["性能优化", "hooks", "react"],
     lastUpdated: new Date().toISOString(),
   },
+  {
+    id: "use-memo",
+    title: "理解 useMemo 钩子",
+    description: "学习如何使用 useMemo 钩子来优化计算性能，包括缓存计算结果和数组操作。",
+    difficulty: 3,
+    category: "hooks",
+    tags: ["性能优化", "hooks", "react", "缓存"],
+    lastUpdated: new Date().toISOString(),
+  },
+  {
+    id: "use-ref",
+    title: "理解 useRef 钩子",
+    description: "学习如何使用 useRef 钩子来操作 DOM 元素、存储变量和处理计时器等场景。",
+    difficulty: 2,
+    category: "hooks",
+    tags: ["DOM", "hooks", "react", "引用"],
+    lastUpdated: new Date().toISOString(),
+  },
 ];

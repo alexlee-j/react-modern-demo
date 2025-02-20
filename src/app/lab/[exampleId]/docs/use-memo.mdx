@@ -1,0 +1,539 @@
+---
+title: "理解 useMemo 钩子"
+description: "学习如何使用 useMemo 钩子来优化计算性能，包括缓存计算结果和数组操作。"
+difficulty: 3
+category: "hooks"
+tags: ["性能优化", "hooks", "react", "缓存"]
+lastUpdated: "2025-02-20"
+---
+
+# useMemo 钩子
+
+## 目录
+- [基本概念](#基本概念)
+  - [什么是 useMemo？](#什么是-usememo)
+  - [为什么使用 useMemo？](#为什么使用-usememo)
+- [实际应用场景](#实际应用场景)
+  - [复杂数据处理](#1-复杂数据处理)
+  - [依赖 Props 的计算](#2-依赖-props-的计算)
+- [缓存机制对比](#缓存机制对比)
+  - [useMemo](#1-usememo---缓存计算结果)
+  - [useCallback](#2-usecallback---缓存函数引用)
+  - [React.memo](#3-reactmemo---缓存组件渲染)
+- [使用注意事项](#使用注意事项)
+- [性能优化建议](#性能优化建议)
+
+useMemo 是 React 中用于性能优化的 Hook。它通过"记忆化"（memoization）技术来缓存计算结果，避免在每次渲染时重复进行昂贵的计算。
+
+## 基本概念
+
+### 什么是 useMemo？
+
+useMemo 接收两个参数：
+1. 一个"创建"函数，用于执行计算并返回需要缓存的值
+2. 一个依赖数组，用于指定何时需要重新计算
+
+```typescript
+// 基本用法示例
+interface MemoProps {
+  a: number;
+  b: number;
+}
+
+const MyComponent: React.FC<MemoProps> = ({ a, b }) => {
+  // 只有当 a 或 b 改变时才重新计算
+  const memoizedValue = useMemo(() => {
+    // 这里是昂贵的计算
+    return computeExpensiveValue(a, b);
+  }, [a, b]); // 依赖数组
+
+  return <div>{memoizedValue}</div>;
+};
+```
+
+### 为什么使用 useMemo？
+
+1. **优化性能**
+   - 避免重复进行昂贵的计算
+   - 减少不必要的重渲染
+
+2. **保持引用稳定**
+   - 对于作为 props 传递的对象或数组
+   - 避免子组件不必要的重渲染
+
+3. **缓存复杂计算结果**
+   - 数据处理和转换
+   - 复杂的数学计算
+
+## 实际应用场景
+
+### 1. 复杂数据处理
+
+当处理大量数据或进行复杂计算时，useMemo 可以显著提升性能：
+
+```typescript
+interface DataItem {
+  id: number;
+  value: number;
+}
+
+const DataProcessor: React.FC<{ data: DataItem[] }> = ({ data }) => {
+  // 缓存复杂的数据处理结果
+  const processedData = useMemo(() => {
+    return data
+      .filter(item => item.value > 0)
+      .map(item => ({ ...item, squared: item.value ** 2 }))
+      .sort((a, b) => b.squared - a.squared);
+  }, [data]); // 只在 data 变化时重新计算
+
+  return (
+    <ul role="list" aria-label="处理后的数据列表">
+      {processedData.map(item => (
+        <li key={item.id} role="listitem">
+          {item.squared}
+        </li>
+      ))}
+    </ul>
+  );
+};
+```
+
+### 2. 依赖 Props 的计算
+
+当计算结果依赖于多个 props 时，使用 useMemo 可以避免不必要的重新计算：
+
+```typescript
+interface ChartProps {
+  data: number[];
+  threshold: number;
+  sortOrder: 'asc' | 'desc';
+}
+
+const ChartComponent: React.FC<ChartProps> = ({
+  data,
+  threshold,
+  sortOrder
+}) => {
+  // 缓存图表数据处理结果
+  const chartData = useMemo(() => {
+    console.log('重新计算图表数据');
+    return {
+      filtered: data.filter(val => val >= threshold),
+      sorted: data.sort((a, b) => 
+        sortOrder === 'asc' ? a - b : b - a
+      ),
+      average: data.reduce((a, b) => a + b, 0) / data.length
+    };
+  }, [data, threshold, sortOrder]);
+
+  return (
+    <div role="region" aria-label="图表展示区域">
+      {/* 图表渲染逻辑 */}
+    </div>
+  );
+};
+```
+
+## 缓存机制对比
+
+### 1. useMemo - 缓存计算结果
+```tsx
+// 用途：缓存复杂计算的结果
+const memoizedValue = useMemo(() => {
+  // 这里是昂贵的计算
+  return computeExpensiveValue(a, b);
+}, [a, b]);
+
+// 适用场景：
+// - 复杂的数据计算
+// - 大数组的处理和转换
+// - 需要缓存对象引用
+```
+
+### 2. useCallback - 缓存函数引用
+```tsx
+// 用途：缓存回调函数的引用
+const memoizedCallback = useCallback(() => {
+  // 这里是事件处理逻辑
+  doSomething(a, b);
+}, [a, b]);
+
+// 适用场景：
+// - 传递给子组件的回调函数
+// - 作为其他 Hook 的依赖项
+// - 需要保持函数引用稳定
+```
+
+### 3. React.memo - 缓存组件渲染
+```tsx
+// 用途：避免组件不必要的重渲染
+const MemoizedComponent = memo(function MyComponent(props) {
+  // 组件的渲染逻辑
+  return <div>{props.data}</div>;
+});
+
+// 适用场景：
+// - 纯展示组件
+// - 接收简单 props 的组件
+// - 重渲染开销大的组件
+```
+
+## 使用注意事项
+
+### 1. 何时使用 useMemo
+
+- **计算成本高**：当计算过程耗时较长或计算量大时
+- **引用相等性重要**：当计算结果用作其他 Hook 的依赖或传递给子组件时
+- **数据处理复杂**：涉及数组过滤、排序、映射等多步操作时
+
+### 2. 何时不使用 useMemo
+
+- **简单的计算**：如基本的数学运算或字符串操作
+- **原始类型值**：如数字、字符串等基本类型
+- **很少变化的值**：如配置项或静态数据
+
+### 3. 常见陷阱
+
+1. **过度使用**
+```typescript
+// ❌ 不需要 useMemo
+const simpleValue = useMemo(() => a + b, [a, b]);
+
+// ✅ 直接计算即可
+const simpleValue = a + b;
+```
+
+2. **依赖数组错误**
+```typescript
+// ❌ 缺少依赖项
+const value = useMemo(() => data.filter(item => item > threshold), [data]);
+
+// ✅ 包含所有依赖项
+const value = useMemo(() => data.filter(item => item > threshold), [data, threshold]);
+```
+
+3. **在错误的地方使用**
+```typescript
+// ❌ 每次渲染都创建新函数
+const Component = () => {
+  const handler = useMemo(() => {
+    return () => console.log('clicked');
+  }, []); // 应该使用 useCallback
+};
+
+// ✅ 使用 useCallback 更适合
+const Component = () => {
+  const handler = useCallback(() => {
+    console.log('clicked');
+  }, []);
+};
+```
+
+## 性能优化建议
+
+### 1. 选择合适的缓存策略
+
+| 场景 | 推荐使用 | 原因 |
+|------|----------|------|
+| 复杂计算 | useMemo | 避免重复计算，提升性能 |
+| 回调函数 | useCallback | 保持函数引用稳定，减少子组件重渲染 |
+| 组件渲染 | React.memo | 避免不必要的组件重渲染 |
+
+### 2. 最佳实践示例
+
+```tsx
+// 1. 复杂计算 - 使用 useMemo
+const DataProcessor = ({ data, threshold }) => {
+  // ✅ 缓存复杂计算结果
+  const processedData = useMemo(() => {
+    return data
+      .filter(item => item > threshold)
+      .map(item => item * 2)
+      .sort((a, b) => b - a);
+  }, [data, threshold]);
+
+  return <DataDisplay data={processedData} />;
+};
+
+// 2. 事件处理 - 使用 useCallback
+const TodoList = ({ onItemClick }) => {
+  // ✅ 缓存回调函数
+  const handleClick = useCallback((id) => {
+    onItemClick(id);
+  }, [onItemClick]);
+
+  return <Items onClick={handleClick} />;
+};
+
+// 3. 纯展示组件 - 使用 React.memo
+const ExpensiveChart = memo(function MyComponent(props) {
+  // ✅ 只在 data 变化时重新渲染
+  return <Chart data={props.data} />;
+});
+```
+
+### 3. 性能优化检查清单
+
+1. **开发阶段**
+   - [ ] 使用 React DevTools 的 Profiler 分析性能瓶颈
+   - [ ] 添加性能计时器监控计算耗时
+   - [ ] 测试不同数据量下的性能表现
+
+2. **代码审查**
+   - [ ] 检查依赖数组是否完整
+   - [ ] 确认缓存策略是否合适
+   - [ ] 验证组件结构是否合理
+
+3. **生产环境**
+   - [ ] 监控实际用户的性能数据
+   - [ ] 关注内存使用情况
+   - [ ] 收集用户反馈
+
+### 4. 常见优化误区
+
+```tsx
+// ❌ 过度优化
+const SimpleComponent = ({ text }) => {
+  // 不需要缓存简单计算
+  const value = useMemo(() => text.trim(), [text]);
+  return <div>{value}</div>;
+};
+
+// ✅ 适度优化
+const SimpleComponent = ({ text }) => {
+  // 直接使用简单计算
+  const value = text.trim();
+  return <div>{value}</div>;
+};
+
+// ❌ 错误的依赖项
+const DataList = ({ data, filter }) => {
+  const filteredData = useMemo(() => {
+    return data.filter(filter);
+  }, [data]); // 缺少 filter 依赖项
+};
+
+// ✅ 正确的依赖项
+const DataList = ({ data, filter }) => {
+  const filteredData = useMemo(() => {
+    return data.filter(filter);
+  }, [data, filter]); // 包含所有依赖项
+};
+```
+
+### 5. 性能优化决策流程
+
+1. **评估是否需要优化**
+   - 当前性能是否存在问题？
+   - 优化成本是否值得？
+   - 是否有更简单的替代方案？
+
+2. **选择优化策略**
+   - 计算密集型 → useMemo
+   - 回调函数 → useCallback
+   - 组件渲染 → React.memo
+
+3. **实施优化**
+   - 编写清晰的代码
+   - 添加必要的注释
+   - 进行充分的测试
+
+4. **验证效果**
+   - 测量优化前后的性能
+   - 确保功能正常
+   - 收集用户反馈
+
+## 示例解析
+
+### 1. 基础示例
+
+```tsx
+// 示例 1：基础的 useMemo 使用
+function SimpleDemo() {
+  const [text, setText] = useState('');
+  const [count, setCount] = useState(0);
+  
+  // 缓存计算结果
+  const processedText = useMemo(() => {
+    console.log('处理文本...');
+    return text.split('').reverse().join('');
+  }, [text]); // 只在 text 变化时重新计算
+  
+  return (
+    <div className="space-y-4">
+      <input
+        value={text}
+        onChange={e => setText(e.target.value)}
+        className="border p-2"
+        placeholder="输入文本"
+      />
+      <div>反转结果: {processedText}</div>
+      <button
+        onClick={() => setCount(c => c + 1)}
+        className="btn"
+      >
+        点击计数: {count}
+      </button>
+    </div>
+  );
+}
+```
+
+**要点解析：**
+- 只有当 `text` 变化时才会重新计算反转结果
+- 点击计数按钮不会触发重新计算
+- 通过控制台日志可以观察计算时机
+
+### 2. 数据处理示例
+
+```tsx
+// 示例 2：处理大量数据
+function DataProcessingDemo() {
+  const [numbers] = useState(() => 
+    Array.from({ length: 1000 }, (_, i) => i)
+  );
+  const [threshold, setThreshold] = useState(500);
+  const [count, setCount] = useState(0);
+  
+  // 缓存数据处理结果
+  const processedData = useMemo(() => {
+    console.log('处理数据...');
+    return {
+      filtered: numbers.filter(n => n > threshold),
+      sum: numbers.reduce((a, b) => a + b, 0),
+      max: Math.max(...numbers)
+    };
+  }, [numbers, threshold]); // 依赖数组包含所有相关数据
+  
+  return (
+    <div className="space-y-4">
+      <div>
+        过滤阈值：
+        <input
+          type="range"
+          min="0"
+          max="1000"
+          value={threshold}
+          onChange={e => setThreshold(Number(e.target.value))}
+          className="ml-2"
+        />
+      </div>
+      <div>
+        过滤后数量：{processedData.filtered.length}
+        <br />
+        总和：{processedData.sum}
+        <br />
+        最大值：{processedData.max}
+      </div>
+      <button
+        onClick={() => setCount(c => c + 1)}
+        className="btn"
+      >
+        点击计数: {count}
+      </button>
+    </div>
+  );
+};
+```
+
+**要点解析：**
+- 使用 `useMemo` 缓存大数据的处理结果
+- 只在数据或阈值变化时重新计算
+- 展示了多个依赖项的情况
+
+### 3. 组件优化示例
+
+```tsx
+// 示例 3：配合 React.memo 使用
+const ExpensiveList = memo(function ExpensiveList({ items, onItemClick }) {
+  console.log('列表渲染...');
+  return (
+    <ul className="space-y-2">
+      {items.map(item => (
+        <li
+          key={item.id}
+          onClick={() => onItemClick(item.id)}
+          className="cursor-pointer hover:bg-gray-100 p-2"
+        >
+          {item.name}
+        </li>
+      ))}
+    </ul>
+  );
+});
+
+function ListDemo() {
+  const [items] = useState(() => 
+    Array.from({ length: 100 }, (_, i) => ({
+      id: i,
+      name: `项目 ${i}`
+    }))
+  );
+  const [selectedId, setSelectedId] = useState(null);
+  const [count, setCount] = useState(0);
+  
+  // 缓存回调函数
+  const handleItemClick = useCallback((id) => {
+    setSelectedId(id);
+  }, []); // 空依赖数组，因为函数不依赖任何变量
+  
+  return (
+    <div className="space-y-4">
+      <ExpensiveList
+        items={items}
+        onItemClick={handleItemClick}
+      />
+      <div>
+        选中项：{selectedId !== null ? selectedId : '无'}
+      </div>
+      <button
+        onClick={() => setCount(c => c + 1)}
+        className="btn"
+      >
+        点击计数: {count}
+      </button>
+    </div>
+  );
+};
+```
+
+**要点解析：**
+- 使用 `React.memo` 避免列表不必要的重渲染
+- 使用 `useCallback` 缓存事件处理函数
+- 展示了 `useMemo`、`useCallback` 和 `memo` 的协同使用
+
+### 4. 实际应用提示
+
+1. **性能监测**
+   ```tsx
+   const value = useMemo(() => {
+     const startTime = performance.now();
+     const result = expensiveComputation();
+     console.log(`计算耗时: ${performance.now() - startTime}ms`);
+     return result;
+   }, [/* 依赖项 */]);
+   ```
+
+2. **错误处理**
+   ```tsx
+   const result = useMemo(() => {
+     try {
+       return expensiveComputation();
+     } catch (error) {
+       console.error('计算出错:', error);
+       return defaultValue;
+     }
+   }, [/* 依赖项 */]);
+   ```
+
+3. **条件缓存**
+   ```tsx
+   const value = useMemo(() => {
+     if (shouldCache) {
+       return expensiveComputation();
+     }
+     return simpleComputation();
+   }, [shouldCache, /* 其他依赖项 */]);
+   ```
+
+每个示例都包含了完整的代码、详细的注释和关键点解析，帮助读者更好地理解和应用 `useMemo`。
