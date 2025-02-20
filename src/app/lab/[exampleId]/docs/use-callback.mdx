@@ -1,0 +1,365 @@
+# useCallback Hook 使用指南
+
+`useCallback` 是 React 的一个性能优化 Hook，它可以帮助我们缓存函数，避免不必要的重新渲染。
+
+## 基本概念
+
+### 什么是 useCallback？
+
+`useCallback` 会返回一个记忆化的函数，在依赖项不变的情况下，这个函数的引用保持不变。这对于需要将函数作为 props 传递给子组件的场景特别有用。
+
+```tsx
+const memoizedCallback = useCallback(
+  () => {
+    doSomething(a, b);
+  },
+  [a, b], // 依赖项数组
+);
+```
+
+### 为什么需要 useCallback？
+
+1. **避免不必要的重新渲染**：
+   - 当一个组件的 props 是函数时，每次父组件重新渲染都会创建新的函数实例
+   - 这会导致接收该函数的子组件也重新渲染
+   - 使用 `useCallback` 可以确保函数的引用在依赖项不变时保持稳定
+
+2. **优化性能**：
+   - 配合 `React.memo` 使用效果最佳
+   - 适用于计算量大的场景
+   - 适用于频繁重新渲染的场景
+
+## 使用场景
+
+### 1. 基础计数器示例
+
+最简单的使用场景，展示了使用和不使用 `useCallback` 的区别：
+
+```tsx
+// 不使用 useCallback - 每次渲染都会创建新函数
+const increment = () => setCount(c => c + 1);
+
+// 使用 useCallback - 函数被缓存
+const increment = useCallback(
+  () => setCount(c => c + 1),
+  [] // 空依赖数组，函数永远不变
+);
+```
+
+### 2. 搜索优化示例
+
+在实际应用中，常常需要处理搜索和防抖：
+
+```tsx
+const SearchComponent = () => {
+  // 优化搜索函数
+  const searchAPI = useCallback(async (query) => {
+    setLoading(true);
+    try {
+      const result = await fetch(`/api/search?q=${query}`);
+      return result.json();
+    } finally {
+      setLoading(false);
+    }
+  }, []); // API 调用函数保持稳定
+
+  // 优化防抖函数
+  const debouncedSearch = useCallback((value) => {
+    const timeoutId = setTimeout(() => {
+      searchAPI(value);
+    }, 300);
+    return () => clearTimeout(timeoutId);
+  }, [searchAPI]); // 依赖 searchAPI
+
+  useEffect(() => {
+    const cleanup = debouncedSearch(query);
+    return cleanup;
+  }, [query, debouncedSearch]);
+};
+```
+
+### 3. 列表渲染优化
+
+在处理大列表时，性能优化尤为重要：
+
+```tsx
+const ListComponent = () => {
+  const [items, setItems] = useState([]);
+  
+  // 优化列表项点击处理
+  const handleItemClick = useCallback((id) => {
+    setItems(prev => prev.map(item => 
+      item.id === id 
+        ? { ...item, selected: !item.selected }
+        : item
+    ));
+  }, []); // 处理函数保持稳定
+
+  return (
+    <div>
+      {items.map(item => (
+        <ListItem
+          key={item.id}
+          item={item}
+          onClick={handleItemClick}
+        />
+      ))}
+    </div>
+  );
+};
+```
+
+### 4. 性能监控示例
+
+通过统计重渲染次数来对比优化效果：
+
+```tsx
+const PerformanceExample = () => {
+  const [renderCounts, setRenderCounts] = useState({ 
+    normal: 0, 
+    optimized: 0 
+  });
+
+  // 不使用 useCallback
+  const normalHandler = () => {
+    // 处理逻辑
+  };
+
+  // 使用 useCallback
+  const optimizedHandler = useCallback(() => {
+    // 处理逻辑
+  }, []);
+
+  return (
+    <div>
+      <StatButton
+        onIncrement={normalHandler}
+        onRender={() => setRenderCounts(prev => ({
+          ...prev,
+          normal: prev.normal + 1
+        }))}
+      />
+      <div>普通组件重渲染次数: {renderCounts.normal}</div>
+
+      <StatButton
+        onIncrement={optimizedHandler}
+        onRender={() => setRenderCounts(prev => ({
+          ...prev,
+          optimized: prev.optimized + 1
+        }))}
+      />
+      <div>优化后重渲染次数: {renderCounts.optimized}</div>
+    </div>
+  );
+};
+```
+
+## 最佳实践
+
+### 1. 合理使用依赖数组
+
+```tsx
+// 好的做法：只包含必要的依赖
+const handleSubmit = useCallback(
+  () => {
+    console.log(name, email);
+  },
+  [name, email] // 只有这些值变化时才需要更新函数
+);
+
+// 不好的做法：包含不必要的依赖
+const handleSubmit = useCallback(
+  () => {
+    console.log(name, email);
+  },
+  [name, email, theme, language] // theme 和 language 在函数中没有使用
+);
+```
+
+### 2. 避免过度优化
+
+不是所有函数都需要 `useCallback`：
+
+- 简单的内联函数
+- 很少重新渲染的组件
+- 不作为 props 传递的函数
+
+```tsx
+// 不需要 useCallback
+const SimpleComponent = () => {
+  // 这种简单的内联函数不需要 useCallback
+  const handleClick = () => console.log('clicked');
+  
+  return <button onClick={handleClick}>点击</button>;
+};
+```
+
+### 3. 配合 memo 使用
+
+`useCallback` 通常需要配合 `React.memo` 使用才能发挥最大效果：
+
+```tsx
+const MemoizedChild = memo(({ onSubmit }) => {
+  console.log("子组件渲染");
+  return <button onClick={onSubmit}>提交</button>;
+});
+
+const Parent = () => {
+  const handleSubmit = useCallback(() => {
+    // 处理提交逻辑
+  }, []); // 空依赖数组
+
+  return <MemoizedChild onSubmit={handleSubmit} />;
+};
+```
+
+### 4. 错误处理
+
+在使用 `useCallback` 时要注意错误处理：
+
+```tsx
+const handleSubmit = useCallback(async () => {
+  try {
+    setLoading(true);
+    await submitData();
+    setSuccess(true);
+  } catch (error) {
+    setError(error.message);
+  } finally {
+    setLoading(false);
+  }
+}, [submitData]); // 依赖外部的 submitData 函数
+```
+
+## 注意事项
+
+1. **不要过度使用**：
+   - 不是所有组件都需要优化
+   - 过度优化可能导致代码复杂度增加
+   - 应该在性能测试后再决定是否使用
+
+2. **依赖项的正确使用**：
+   - 确保依赖数组包含所有需要的值
+   - 避免遗漏依赖项
+   - 使用 ESLint 插件 `exhaustive-deps` 检查依赖项
+
+3. **避免内联对象**：
+   ```tsx
+   // 不好的做法
+   const MemoizedChild = memo(({ style }) => <div style={style} />);
+   
+   const Parent = () => (
+     <MemoizedChild
+       style={{ color: 'red' }} // 每次渲染都会创建新对象
+     />
+   );
+
+   // 好的做法
+   const styles = { color: 'red' }; // 在组件外定义
+   
+   const Parent = () => (
+     <MemoizedChild style={styles} />
+   );
+   ```
+
+## 性能优化技巧
+
+1. **使用 React DevTools 分析**：
+   - 观察组件的重新渲染情况
+   - 检查 props 的变化
+   - 识别不必要的重新渲染
+
+2. **添加性能监控**：
+   - 使用计数器跟踪重新渲染
+   - 记录函数创建次数
+   - 测量性能提升效果
+
+3. **常见优化模式**：
+   - 将大型列表拆分为小组件
+   - 使用虚拟滚动处理长列表
+   - 延迟加载不可见内容
+
+## 调试和测试
+
+1. **使用 React DevTools**：
+   - 观察组件的重新渲染情况
+   - 检查 props 的变化
+
+2. **使用 console.log**：
+   - 在组件中添加日志
+   - 观察函数是否被重新创建
+
+3. **性能分析**：
+   - 使用 Chrome DevTools 的 Performance 面板
+   - 使用 React Profiler
+   - 对比使用和不使用 `useCallback` 的性能差异
+
+4. **编写测试**：
+   ```tsx
+   test('useCallback memoizes function', () => {
+     const { result, rerender } = renderHook(() => {
+       const [value, setValue] = useState(0);
+       const callback = useCallback(() => value, [value]);
+       return { callback, setValue };
+     });
+
+     const firstCallback = result.current.callback;
+     rerender();
+     expect(result.current.callback).toBe(firstCallback);
+   });
+   ```
+
+## 常见问题和解决方案
+
+1. **函数依赖项不稳定**：
+   ```tsx
+   // 问题
+   const handler = useCallback(() => {
+     doSomething(props.value);
+   }, [props.value]); // props.value 可能经常变化
+
+   // 解决方案
+   const handler = useCallback(() => {
+     doSomething(value);
+   }, []); // 使用 state 或其他稳定的值
+   ```
+
+2. **循环中的回调函数**：
+   ```tsx
+   // 问题
+   {items.map(item => (
+     <Button
+       onClick={() => handleClick(item.id)} // 每次渲染都创建新函数
+     />
+   ))}
+
+   // 解决方案
+   const handleClick = useCallback((id) => {
+     // 处理点击
+   }, []);
+
+   {items.map(item => (
+     <Button onClick={() => handleClick(item.id)} />
+   ))}
+   ```
+
+3. **异步函数中的状态更新**：
+   ```tsx
+   // 问题
+   const handleSubmit = useCallback(async () => {
+     const data = await fetchData();
+     setValue(data); // 可能使用过期的状态
+   }, []);
+
+   // 解决方案
+   const handleSubmit = useCallback(async () => {
+     const data = await fetchData();
+     setValue(currentValue => computeNewValue(currentValue, data));
+   }, []);
+   ```
+
+## 参考资源
+
+1. [React 官方文档 - useCallback](https://react.dev/reference/react/useCallback)
+2. [React DevTools](https://react.dev/learn/react-developer-tools)
+3. [ESLint Plugin React Hooks](https://www.npmjs.com/package/eslint-plugin-react-hooks)

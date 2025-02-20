@@ -64,4 +64,13 @@ export const examples: ExampleCard[] = [
     tags: ["状态管理", "hooks", "react"],
     lastUpdated: new Date().toISOString(),
   },
+  {
+    id: "use-callback",
+    title: "理解 useCallback 钩子",
+    description: "学习如何使用 useCallback 钩子来优化函数组件性能，避免不必要的重渲染。",
+    difficulty: 3,
+    category: "hooks",
+    tags: ["性能优化", "hooks", "react"],
+    lastUpdated: new Date().toISOString(),
+  },
 ];

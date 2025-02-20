@@ -58,7 +58,7 @@ src/app/lab/[exampleId]/
 - [x] useState
 - [x] useEffect
 - [x] useContext
-- [ ] useReducer
+- [x] useReducer
 - [ ] useCallback
 - [ ] useMemo
 - [ ] useRef

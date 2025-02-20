@@ -441,7 +441,7 @@ dispatch({ type: 'SET_FILTER', payload: 'active' });`;
 export default function UseReducerDemo() {
   return (
     <div className="space-y-8">
-      <div className="prose max-w-none">
+      <div className="bg-blue-50 p-4 rounded-lg mb-8 prose">
         <h1>useReducer Hook</h1>
         <p>
           useReducer 是 React 中用于处理复杂状态逻辑的 Hook。它是 useState 的替代方案，

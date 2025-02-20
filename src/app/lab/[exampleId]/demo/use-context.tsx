@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
+import { Markdown } from '@/components/markdown';
 
 // 1. 创建主题上下文
 interface ThemeContextType {
@@ -139,20 +140,53 @@ const Content = () => {
   );
 };
 
+// 示例代码
+const basicExample = `
+// 1. 创建主题上下文
+interface ThemeContextType {
+  isDark: boolean;
+  toggleTheme: () => void;
+}
+
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+
+// 2. 创建语言上下文
+interface LanguageContextType {
+  language: 'zh' | 'en';
+  setLanguage: (lang: 'zh' | 'en') => void;
+}
+
+const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+
+// 3. 使用上下文
+const useTheme = () => {
+  const context = useContext(ThemeContext);
+  if (context === undefined) {
+    throw new Error('useTheme 必须在 ThemeProvider 内部使用');
+  }
+  return context;
+};
+`;
+
 // 10. 主组件
 const UseContextExample = () => {
   return (
-    <ThemeProvider>
+    <div className="space-y-8">
       <LanguageProvider>
-        <div className="space-y-4">
-          <div className="flex justify-between">
+        <ThemeProvider>
+          <Card className="p-6">
+            <h2 className="text-2xl font-bold mb-4">Context 示例</h2>
             <ThemeToggle />
             <LanguageToggle />
-          </div>
-          <Content />
-        </div>
+            <Content />
+          </Card>
+          <Card className="p-6">
+            <h2 className="text-2xl font-bold mb-4">示例代码</h2>
+            <Markdown>{basicExample}</Markdown>
+          </Card>
+        </ThemeProvider>
       </LanguageProvider>
-    </ThemeProvider>
+    </div>
   );
 };
 
