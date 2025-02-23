@@ -188,4 +188,14 @@ export const examples: ExampleCard[] = [
     tags: ["响应式", "媒体查询", "自定义Hook", "设备特性"],
     lastUpdated: new Date().toISOString(),
   },
+  {
+    id: "use-window-size",
+    title: "使用 useWindowSize 监听窗口大小",
+    description:
+      "学习如何创建自定义 Hook 来监听和响应浏览器窗口大小的变化，包括性能优化和服务端渲染兼容。",
+    difficulty: 2,
+    category: "hooks",
+    tags: ["hooks", "窗口", "响应式"],
+    lastUpdated: new Date().toISOString(),
+  },
 ];
