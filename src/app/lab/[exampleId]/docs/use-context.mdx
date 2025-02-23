@@ -108,17 +108,79 @@ const Content = () => {
 
 ## 常见问题
 
-1. **Context 的值改变时，所有消费该 Context 的组件都会重新渲染**
-   - 解决：使用 useMemo 或 useCallback 来优化
+### Context 的值改变时，如何优化性能？
 
-2. **在错误的层级使用 Context**
-   - 确保 Provider 包裹了所有需要访问 Context 的组件
+```tsx
+// 问题：每次 Context 值变化都导致重新渲染
+const ThemeProvider = ({ children }) => {
+  const [theme, setTheme] = useState({ mode: 'light' });
+  
+  // 每次渲染都创建新的对象
+  const value = {
+    theme,
+    toggleTheme: () => setTheme(prev => 
+      prev.mode === 'light' ? { mode: 'dark' } : { mode: 'light' }
+    )
+  };
 
-3. **忘记提供 Provider**
-   - 总是确保在使用 Context 的组件外层有对应的 Provider
+  return (
+    <ThemeContext.Provider value={value}>
+      {children}
+    </ThemeContext.Provider>
+  );
+};
 
-4. **Context 值频繁变化**
-   - 考虑将经常变化的值和不经常变化的值分开到不同的 Context
+// 解决方案：使用 useMemo 和 useCallback
+const ThemeProvider = ({ children }) => {
+  const [theme, setTheme] = useState({ mode: 'light' });
+  
+  const toggleTheme = useCallback(() => {
+    setTheme(prev => 
+      prev.mode === 'light' ? { mode: 'dark' } : { mode: 'light' }
+    );
+  }, []);
+
+  const value = useMemo(() => ({
+    theme,
+    toggleTheme
+  }), [theme, toggleTheme]);
+
+  return (
+    <ThemeContext.Provider value={value}>
+      {children}
+    </ThemeContext.Provider>
+  );
+};
+```
+
+### 如何正确处理 Context 的层级结构？
+
+```tsx
+// 问题：Context 层级错误
+const App = () => {
+  const { theme } = useTheme(); // 错误：Provider 不在正确的位置
+  
+  return (
+    <ThemeProvider>
+      <Layout />
+    </ThemeProvider>
+  );
+};
+
+// 解决方案：确保正确的 Context 层级
+const App = () => {
+  return (
+    <ThemeProvider>
+      <Layout /> {/* Layout 及其子组件现在可以访问 theme */}
+    </ThemeProvider>
+  );
+};
+
+const Layout = () => {
+  const { theme } = useTheme(); // 正确：在 Provider 内部使用
+  return <div className={theme.mode}>...</div>;
+};
+```
 
 ## 相关资源
 

@@ -147,26 +147,127 @@ const fullName = `${firstName} ${lastName}`; // 计算得到
 
 ## 常见问题
 
-<FAQ
-  questions={[
-    {
-      q: "为什么我的状态更新没有立即生效？",
-      a: "React 的状态更新是异步的，多个状态更新可能会被批处理以提高性能。如果你需要基于之前的状态进行更新，应该使用函数形式：setCount(prevCount => prevCount + 1)"
-    },
-    {
-      q: "我可以在条件语句中使用 useState 吗？",
-      a: "不可以。Hook 必须在组件的顶层调用，不能在循环、条件或嵌套函数中调用。这是因为 React 依赖 Hook 的调用顺序来正确管理组件状态。"
-    },
-    {
-      q: "如何使用 useState 管理复杂的状态？",
-      a: "对于复杂的状态管理，你可以：1) 使用对象或数组来组织相关状态；2) 将相关状态拆分为多个 useState 调用；3) 考虑使用 useReducer 来管理更复杂的状态逻辑。"
-    },
-    {
-      q: "useState 和 useReducer 该用哪个？",
-      a: "一般规则是：如果状态更新逻辑很简单，使用 useState；如果状态更新逻辑复杂或者有多个状态相互依赖，使用 useReducer。useReducer 通常更适合处理复杂的状态逻辑，特别是当一个事件需要更新多个状态时。"
-    }
-  ]}
-/>
+### Q1: 为什么我的状态更新没有立即生效？
+
+A: React 的状态更新是异步的，多个状态更新可能会被批处理以提高性能。如果你需要基于之前的状态进行更新，应该使用函数形式。
+
+```tsx
+// ❌ 错误：可能无法正确更新
+const handleClick = () => {
+  setCount(count + 1);
+  setCount(count + 1); // 仍然基于相同的 count 值
+};
+
+// ✅ 正确：使用函数式更新
+const handleClick = () => {
+  setCount(prev => prev + 1);
+  setCount(prev => prev + 1); // 正确地增加 2
+};
+```
+
+### Q2: 我可以在条件语句中使用 useState 吗？
+
+A: 不可以。Hook 必须在组件的顶层调用，不能在循环、条件或嵌套函数中调用。这是因为 React 依赖 Hook 的调用顺序来正确管理组件状态。
+
+```tsx
+// ❌ 错误：条件语句中使用 Hook
+function Component() {
+  if (condition) {
+    const [state, setState] = useState(0);
+  }
+  return null;
+}
+
+// ✅ 正确：在顶层使用 Hook
+function Component() {
+  const [state, setState] = useState(0);
+  
+  if (condition) {
+    // 在这里使用 state
+  }
+  return null;
+}
+```
+
+### Q3: 如何使用 useState 管理复杂的状态？
+
+A: 对于复杂的状态管理，你可以：
+1. 使用对象或数组来组织相关状态
+2. 将相关状态拆分为多个 useState 调用
+3. 考虑使用 useReducer 来管理更复杂的状态逻辑
+
+```tsx
+// ❌ 不推荐：状态过于复杂
+const [state, setState] = useState({
+  user: null,
+  posts: [],
+  comments: [],
+  likes: {},
+  settings: {}
+});
+
+// ✅ 推荐：拆分为多个状态
+const [user, setUser] = useState(null);
+const [posts, setPosts] = useState([]);
+const [comments, setComments] = useState([]);
+
+// 或者使用 useReducer
+const [state, dispatch] = useReducer(reducer, initialState);
+```
+
+### Q4: useState 和 useReducer 该用哪个？
+
+A: 选择依据如下：
+
+1. **使用 useState 的场景**：
+   - 简单的状态逻辑
+   - 独立的状态更新
+   - 状态结构简单
+
+2. **使用 useReducer 的场景**：
+   - 复杂的状态逻辑
+   - 多个状态相互依赖
+   - 需要统一的状态更新逻辑
+
+```tsx
+// ❌ useState 处理复杂状态可能变得混乱
+const TodoList = () => {
+  const [todos, setTodos] = useState([]);
+  const [filter, setFilter] = useState('all');
+  const [loading, setLoading] = useState(false);
+
+  const addTodo = (text) => {
+    setTodos([...todos, { text, completed: false }]);
+  };
+
+  const toggleTodo = (index) => {
+    setTodos(todos.map((todo, i) => 
+      i === index ? { ...todo, completed: !todo.completed } : todo
+    ));
+  };
+};
+
+// ✅ useReducer 更适合处理复杂状态
+const todoReducer = (state, action) => {
+  switch (action.type) {
+    case 'ADD_TODO':
+      return { ...state, todos: [...state.todos, { text: action.text, completed: false }] };
+    case 'TOGGLE_TODO':
+      return {
+        ...state,
+        todos: state.todos.map((todo, i) =>
+          i === action.index ? { ...todo, completed: !todo.completed } : todo
+        )
+      };
+    default:
+      return state;
+  }
+};
+
+const TodoList = () => {
+  const [state, dispatch] = useReducer(todoReducer, { todos: [], filter: 'all' });
+};
+```
 
 ## 最佳实践
 

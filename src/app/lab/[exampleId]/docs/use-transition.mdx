@@ -1,0 +1,381 @@
+# useTransition
+
+## API 说明
+
+```typescript
+const [isPending, startTransition] = useTransition();
+```
+
+### 返回值
+
+- `isPending`: 布尔值，表示是否有待处理的状态更新
+- `startTransition`: 函数，用于包装非紧急的状态更新
+
+### 特点
+
+- 不会阻塞用户界面
+- 支持并发渲染
+- 可中断和恢复
+- 自动批处理更新
+
+## 使用场景
+
+### 1. 大数据列表过滤
+
+处理大量数据的过滤和搜索操作：
+
+```tsx
+const SearchList = () => {
+  const [isPending, startTransition] = useTransition();
+  const [query, setQuery] = useState('');
+  const [items, setItems] = useState(initialItems);
+
+  const handleSearch = (e) => {
+    const value = e.target.value;
+    setQuery(value); // 立即更新输入框
+    
+    startTransition(() => {
+      // 在 transition 中处理耗时的过滤操作
+      setItems(filterItems(value));
+    });
+  };
+
+  return (
+    <div>
+      <input value={query} onChange={handleSearch} />
+      {isPending && <LoadingIndicator />}
+      <ItemList items={items} />
+    </div>
+  );
+};
+```
+
+### 2. 页面切换动画
+
+实现流畅的页面过渡效果：
+
+```tsx
+const PageTransition = () => {
+  const [isPending, startTransition] = useTransition();
+  const [page, setPage] = useState('home');
+
+  const navigateTo = (newPage) => {
+    startTransition(() => {
+      setPage(newPage);
+    });
+  };
+
+  return (
+    <div className={isPending ? 'transitioning' : ''}>
+      <Navigation onNavigate={navigateTo} />
+      <PageContent page={page} />
+    </div>
+  );
+};
+```
+
+### 3. 复杂 UI 更新
+
+处理多个相关状态的更新：
+
+```tsx
+const ComplexUI = () => {
+  const [isPending, startTransition] = useTransition();
+  const [data, setData] = useState(initialData);
+  const [view, setView] = useState('list');
+
+  const updateDataAndView = (newData, newView) => {
+    startTransition(() => {
+      setData(newData);
+      setView(newView);
+    });
+  };
+
+  return (
+    // UI 实现
+  );
+};
+```
+
+## 最佳实践
+
+### 1. 正确区分更新优先级
+
+```tsx
+// ✅ 好的实践
+const handleInput = (e) => {
+  const value = e.target.value;
+  setValue(value);  // 紧急更新：直接用户反馈
+  
+  startTransition(() => {
+    // 非紧急更新：复杂计算或渲染
+    setSearchResults(search(value));
+  });
+};
+
+// ❌ 错误的实践
+const handleInput = (e) => {
+  startTransition(() => {
+    setValue(e.target.value);  // 不应该将直接的用户输入放在 transition 中
+  });
+};
+```
+
+### 2. 优化加载状态显示
+
+```tsx
+// ✅ 好的实践
+const LoadingState = () => {
+  return (
+    <div>
+      {isPending ? (
+        <div className="overlay">
+          <Spinner />
+        </div>
+      ) : null}
+      <Content />
+    </div>
+  );
+};
+
+// ❌ 错误的实践
+const LoadingState = () => {
+  return (
+    <div>
+      {isPending && <Spinner />}  // 可能导致布局抖动
+      <Content />
+    </div>
+  );
+};
+```
+
+### 3. 合理组织过渡更新
+
+```tsx
+// ✅ 好的实践
+startTransition(() => {
+  // 将相关的状态更新组合在一起
+  setResults(newResults);
+  setPage(newPage);
+  setFilters(newFilters);
+});
+
+// ❌ 错误的实践
+startTransition(() => setResults(newResults));
+startTransition(() => setPage(newPage));
+startTransition(() => setFilters(newFilters));
+```
+
+## 性能优化建议
+
+1. **避免不必要的过渡**
+   - 只将真正耗时的操作包装在 transition 中
+   - 小规模更新直接使用普通的状态更新
+
+2. **合理使用 isPending 状态**
+   - 提供适当的加载反馈
+   - 避免布局抖动
+   - 考虑使用骨架屏或占位符
+
+3. **配合其他性能优化手段**
+   - 使用 `React.memo` 避免不必要的重渲染
+   - 配合 `useMemo` 缓存计算结果
+   - 使用虚拟列表处理大量数据
+
+## 常见问题
+
+### 1. useTransition vs useDeferredValue
+
+- `useTransition`: 直接控制状态更新的优先级
+- `useDeferredValue`: 为派生状态创建延迟版本
+
+### 2. 并发更新的限制
+
+- 不能中断正在进行的渲染
+- 不适用于 Promise 或异步操作
+- 需要考虑状态更新的顺序
+
+### 3. 服务端渲染注意事项
+
+- SSR 环境下可能表现不同
+- 确保客户端水合一致性
+- 考虑使用 Suspense 边界
+
+## React 19 新特性集成
+
+### 1. 配合 use hook
+
+```tsx
+const DataComponent = () => {
+  const [isPending, startTransition] = useTransition();
+  const data = use(fetchData());
+
+  const handleRefresh = () => {
+    startTransition(() => {
+      // 在 transition 中刷新数据
+      refreshData();
+    });
+  };
+
+  return (
+    <div>
+      {isPending ? <LoadingSpinner /> : <DataView data={data} />}
+      <Button onClick={handleRefresh}>刷新</Button>
+    </div>
+  );
+};
+```
+
+### 2. 结合 useOptimistic
+
+```tsx
+const OptimisticComponent = () => {
+  const [isPending, startTransition] = useTransition();
+  const [optimisticState, addOptimistic] = useOptimistic(
+    initialState,
+    (state, action) => ({ ...state, ...action })
+  );
+
+  const handleAction = async () => {
+    startTransition(() => {
+      // 乐观更新
+      addOptimistic({ status: 'loading' });
+      // 实际操作
+      performAction();
+    });
+  };
+
+  return (
+    <div>
+      <StateView state={optimisticState} />
+      <Button onClick={handleAction} disabled={isPending}>
+        执行操作
+      </Button>
+    </div>
+  );
+};
+```
+
+## 实际应用场景
+
+### 1. 大数据可视化
+
+```tsx
+const DataVisualization = ({ data }) => {
+  const [isPending, startTransition] = useTransition();
+  const [view, setView] = useState('table');
+  const [filters, setFilters] = useState([]);
+
+  const handleViewChange = (newView) => {
+    setView(newView); // 立即更新视图类型
+    startTransition(() => {
+      // 在 transition 中处理复杂的数据转换
+      setFilters(generateFilters(newView, data));
+    });
+  };
+
+  return (
+    <div className={isPending ? 'updating' : ''}>
+      <ViewControls current={view} onChange={handleViewChange} />
+      <DataDisplay data={data} view={view} filters={filters} />
+    </div>
+  );
+};
+```
+
+### 2. 实时协作编辑器
+
+```tsx
+const CollaborativeEditor = () => {
+  const [isPending, startTransition] = useTransition();
+  const [content, setContent] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
+
+  const handleContentChange = (newContent) => {
+    setContent(newContent); // 立即更新编辑器内容
+    startTransition(() => {
+      // 在 transition 中处理建议和同步
+      setSuggestions(generateSuggestions(newContent));
+      syncWithServer(newContent);
+    });
+  };
+
+  return (
+    <div>
+      <Editor
+        content={content}
+        onChange={handleContentChange}
+        className={isPending ? 'syncing' : ''}
+      />
+      <SuggestionPanel suggestions={suggestions} />
+    </div>
+  );
+};
+```
+
+## 性能监控与分析
+
+### 1. 自定义性能钩子
+
+```tsx
+const useTransitionWithMetrics = () => {
+  const [isPending, startTransition] = useTransition();
+  const startTime = useRef(0);
+
+  const startTransitionWithMetrics = useCallback(
+    (callback: () => void) => {
+      startTime.current = performance.now();
+      startTransition(() => {
+        callback();
+        const duration = performance.now() - startTime.current;
+        // 记录性能指标
+        console.log(`Transition completed in ${duration}ms`);
+      });
+    },
+    []
+  );
+
+  return [isPending, startTransitionWithMetrics];
+};
+```
+
+### 2. 性能优化建议
+
+1. 使用 Chrome DevTools Performance 面板分析转换时间
+2. 监控 isPending 状态的持续时间
+3. 设置性能预算，超过阈值时进行优化
+4. 使用 React Profiler 分析组件渲染性能
+5. 考虑使用 Web Vitals 指标评估用户体验
+- 需要合理处理水合阶段
+- 考虑首次渲染的性能
+
+## 注意事项
+
+1. 不要在 transition 中执行副作用操作
+2. 避免在 transition 中处理用户输入
+3. 合理设置超时和重试机制
+4. 注意内存使用和性能开销
+5. 正确处理错误边界
+
+## 与其他方案对比
+
+| 方案 | 用户体验 | 实现复杂度 | 性能影响 | 适用场景 |
+|------|----------|------------|----------|----------|
+| useTransition | 高 | 中 | 低 | 复杂 UI 更新 |
+| 防抖/节流 | 中 | 低 | 低 | 简单输入处理 |
+| 异步更新 | 中 | 高 | 中 | 数据加载 |
+| 分页加载 | 低 | 低 | 低 | 列表加载 |
+
+## 总结
+
+`useTransition` 是 React 18 中强大的性能优化工具，通过合理使用可以：
+
+- 提升应用的响应性
+- 优化用户体验
+- 处理复杂的状态更新
+- 实现流畅的 UI 过渡
+
+在实际开发中，应该根据具体场景选择合适的状态更新策略，对于复杂的 UI 更新和大规模数据处理，`useTransition` 是最佳选择。
+- 需要合理处理水合阶段
+- 考虑首次渲染的性能
+

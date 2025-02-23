@@ -144,15 +144,85 @@ const MyComponent = () => {
 
 ## 常见问题
 
-### Q1: 为什么我的 ref 值在渲染中没有更新？
-A: ref.current 的更新不会触发重新渲染。如果需要在 UI 中显示，应该使用 useState。
+### 为什么我的 ref 值在渲染中没有更新？
 
-### Q2: ref.current 可能是 null 吗？
-A: 是的，特别是在访问 DOM 元素时。总是检查 null：
-```typescript
-if (inputRef.current) {
-  inputRef.current.focus();
-}
+ref.current 的更新不会触发重新渲染。这是因为 ref 是一个可变对象，它的更改不会通知 React。
+
+```tsx
+// 问题：ref 更新不会触发重新渲染
+const Component = () => {
+  const countRef = useRef(0);
+  
+  const increment = () => {
+    countRef.current += 1; // 不会触发重新渲染
+    console.log(countRef.current);
+  };
+
+  return (
+    <div>
+      <p>Count: {countRef.current}</p> {/* UI 不会更新 */}
+      <button onClick={increment}>增加</button>
+    </div>
+  );
+};
+
+// 解决方案：使用 useState 来触发重新渲染
+const Component = () => {
+  const [count, setCount] = useState(0);
+  const countRef = useRef(0);
+  
+  const increment = () => {
+    countRef.current += 1;
+    setCount(countRef.current); // 触发重新渲染
+  };
+
+  return (
+    <div>
+      <p>Count: {count}</p>
+      <button onClick={increment}>增加</button>
+    </div>
+  );
+};
+```
+
+### ref.current 可能是 null 吗？
+
+是的，特别是在访问 DOM 元素时。我们需要正确处理这种情况：
+
+```tsx
+// 问题：没有检查 ref.current 是否为 null
+const Component = () => {
+  const inputRef = useRef<HTMLInputElement>(null);
+  
+  const focus = () => {
+    inputRef.current.focus(); // 可能会抛出错误
+  };
+
+  return (
+    <div>
+      <input ref={inputRef} />
+      <button onClick={focus}>聚焦</button>
+    </div>
+  );
+};
+
+// 解决方案：添加 null 检查
+const Component = () => {
+  const inputRef = useRef<HTMLInputElement>(null);
+  
+  const focus = () => {
+    if (inputRef.current) { // 安全地检查
+      inputRef.current.focus();
+    }
+  };
+
+  return (
+    <div>
+      <input ref={inputRef} />
+      <button onClick={focus}>聚焦</button>
+    </div>
+  );
+};
 ```
 
 ### Q3: 可以在渲染期间更新 ref 吗？

@@ -86,3 +86,26 @@ useReducer 特别适合以下场景：
 - [React 状态管理最佳实践](https://react.dev/learn/managing-state)
 - [TypeScript 与 React Hooks](https://react.dev/learn/typescript)
 - [React Hooks 测试指南](https://react.dev/learn/testing)
+
+## 常见问题
+
+<FAQ
+  questions={[
+    {
+      q: "为什么要使用 useReducer 而不是 useState？",
+      a: "当状态逻辑复杂或者状态之间有依赖关系时，useReducer 能提供更好的状态管理方式。它将所有状态更新逻辑集中在一个 reducer 函数中，使代码更容易维护和测试。"
+    },
+    {
+      q: "如何在 useReducer 中处理异步操作？",
+      a: "useReducer 本身不处理异步操作。你需要结合 useEffect 或者在 dispatch action 之前处理异步逻辑。对于复杂的异步操作，可以考虑使用 Redux Thunk 这样的中间件模式。"
+    },
+    {
+      q: "reducer 函数应该放在组件内部还是外部？",
+      a: "通常建议将 reducer 函数放在组件外部，这样可以：1) 提高代码的可复用性；2) 方便进行单元测试；3) 避免在每次组件渲染时重新创建函数。如果 reducer 依赖组件的 props，则可以放在组件内部。"
+    },
+    {
+      q: "如何优化使用 useReducer 的组件性能？",
+      a: "可以通过以下方式优化：1) 使用 useMemo 缓存计算结果；2) 使用 useCallback 缓存事件处理函数；3) 适当拆分组件减少不必要的重渲染；4) 在 reducer 中避免直接修改状态对象，始终返回新的状态对象。"
+    }
+  ]}
+/>

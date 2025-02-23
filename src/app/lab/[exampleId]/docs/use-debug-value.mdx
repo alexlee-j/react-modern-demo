@@ -1,0 +1,188 @@
+# useDebugValue 示例
+
+## 基本介绍
+
+useDebugValue 是 React 提供的一个用于调试的 Hook，它可以在 React DevTools 中为自定义 Hook 添加标签。这个 Hook 主要用于开发阶段，帮助开发者更好地理解和调试自定义 Hook 的状态。
+
+## 基础用法
+
+### 简单的调试标签
+
+```tsx
+import { useDebugValue, useState } from "react";
+
+function useOnlineStatus() {
+  const [isOnline, setIsOnline] = useState(true);
+
+  // 在 React DevTools 中显示当前状态
+  useDebugValue(isOnline ? "在线" : "离线");
+
+  return isOnline;
+}
+
+export default function OnlineStatus() {
+  const isOnline = useOnlineStatus();
+
+  return <div>当前状态: {isOnline ? "🟢 在线" : "🔴 离线"}</div>;
+}
+```
+
+### 条件格式化
+
+有时候，格式化调试值的操作可能会很昂贵。在这种情况下，我们可以传递一个格式化函数作为 useDebugValue 的第二个参数：
+
+```tsx
+import { useDebugValue, useState } from "react";
+
+function useDataFetcher(url: string) {
+  const [data, setData] = useState<any>(null);
+
+  // 格式化函数只在 React DevTools 打开时才会调用
+  useDebugValue(data, (data) => {
+    if (!data) return "加载中...";
+    return `数据大小: ${JSON.stringify(data).length} 字节`;
+  });
+
+  // ... 数据获取逻辑
+
+  return data;
+}
+
+export default function DataViewer() {
+  const data = useDataFetcher("https://api.example.com/data");
+
+  return (
+    <div>
+      {data ? <pre>{JSON.stringify(data, null, 2)}</pre> : <p>加载中...</p>}
+    </div>
+  );
+}
+```
+
+### 性能优化示例
+
+在复杂的自定义 Hook 中，我们可以结合使用 useDebugValue 和其他性能优化技巧：
+
+```tsx
+import { useDebugValue, useMemo, useState } from "react";
+
+function useExpensiveCalculation(value: number) {
+  const [result, setResult] = useState<number>(0);
+
+  // 使用 useMemo 缓存计算结果
+  const calculation = useMemo(() => {
+    const start = performance.now();
+    // 模拟复杂计算
+    const calculatedValue = Array(value)
+      .fill(0)
+      .reduce((acc) => acc + Math.random(), 0);
+    const end = performance.now();
+
+    return {
+      value: calculatedValue,
+      time: end - start,
+    };
+  }, [value]);
+
+  // 使用格式化函数延迟调试值的格式化
+  useDebugValue(calculation, (calc) => {
+    return `计算结果: ${calc.value.toFixed(2)} (耗时: ${calc.time.toFixed(
+      2
+    )}ms)`;
+  });
+
+  return calculation.value;
+}
+
+export default function Calculator() {
+  const [input, setInput] = useState(1000);
+  const result = useExpensiveCalculation(input);
+
+  return (
+    <div>
+      <input
+        type="number"
+        value={input}
+        onChange={(e) => setInput(Number(e.target.value))}
+        min="0"
+        max="10000"
+      />
+      <p>计算结果: {result.toFixed(2)}</p>
+    </div>
+  );
+}
+```
+
+## 最佳实践
+
+1. 仅在自定义 Hook 中使用 useDebugValue
+
+```tsx
+// ✅ 好：在自定义 Hook 中使用
+function useCustomHook() {
+  useDebugValue("debug info");
+}
+
+// ❌ 差：在普通组件中使用
+function Component() {
+  useDebugValue("debug info"); // 不必要
+}
+```
+
+2. 使用格式化函数优化性能
+
+```tsx
+// ✅ 好：使用格式化函数延迟计算
+useDebugValue(data, (data) => expensiveOperation(data));
+
+// ❌ 差：直接进行昂贵的计算
+useDebugValue(expensiveOperation(data));
+```
+
+3. 提供有意义的调试信息
+
+```tsx
+// ✅ 好：提供有用的上下文信息
+useDebugValue(isLoading ? "加载中" : `已加载 ${items.length} 项`);
+
+// ❌ 差：信息过于简单
+useDebugValue(items);
+```
+
+## 常见问题
+
+<FAQ
+  questions={[
+    {
+      q: "useDebugValue 会影响生产环境的性能吗？",
+      a: "不会。useDebugValue 仅在开发工具（React DevTools）打开时才会执行格式化函数，在生产环境中不会产生任何性能开销。"
+    },
+    {
+      q: "什么时候应该使用 useDebugValue？",
+      a: "当你创建可复用的自定义 Hook 时，特别是在库中的 Hook，使用 useDebugValue 可以帮助其他开发者更好地理解和调试你的 Hook。对于应用内部的简单 Hook，通常不需要使用 useDebugValue。"
+    },
+    {
+      q: "可以在一个 Hook 中多次调用 useDebugValue 吗？",
+      a: "可以，但建议保持适度。每个 useDebugValue 调用都会在 DevTools 中显示一个标签，过多的调试值可能会使调试界面变得混乱。"
+    },
+    {
+      q: "如何在 TypeScript 中正确使用 useDebugValue？",
+      a: "在 TypeScript 中使用 useDebugValue 时，建议为格式化函数提供明确的类型注解，以确保类型安全：\n```typescript\nuseDebugValue<T>(value: T, format: (value: T) => string);\n```"
+    },
+    {
+      q: "useDebugValue 的格式化函数什么时候会被调用？",
+      a: "格式化函数仅在 React DevTools 实际需要显示调试值时才会被调用。这种延迟执行的设计可以避免在不需要时执行昂贵的格式化操作。"
+    }
+  ]}
+/>
+
+## 相关资源
+
+- [React 官方文档：useDebugValue](https://react.dev/reference/react/useDebugValue)
+- [React DevTools 调试指南](https://react.dev/learn/react-developer-tools)
+
+## 下一步学习
+
+- useId：学习如何生成唯一标识符
+- useDeferredValue：学习如何处理延迟加载的值
+- useTransition：学习如何处理状态转换

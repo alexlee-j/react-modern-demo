@@ -134,20 +134,447 @@ useEffect(() => {
 
 ## 常见问题
 
-### 1. 依赖项问题
+### Q1: 为什么我的 useEffect 会无限循环？
 
-问题：副作用函数使用了未在依赖数组中声明的值。
-解决：添加所有必要的依赖，或重构代码以移除不必要的依赖。
+A: 可能的原因有：
+1. 依赖数组中包含了可变对象或数组
+2. Effect 中更新的状态被用作了依赖项
+3. Effect 中的操作导致组件重新渲染
 
-### 2. 清理问题
+```typescript
+// ❌ 错误示例：导致无限循环
+const Component = () => {
+  const [data, setData] = useState([]);
+  
+  useEffect(() => {
+    setData([...data, 'new item']); // 更新依赖项，导致循环
+  }, [data]);
+};
 
-问题：未正确清理副作用导致内存泄漏。
-解决：返回清理函数以取消订阅或清理资源。
+// ✅ 正确示例：使用函数式更新
+const Component = () => {
+  const [data, setData] = useState([]);
+  
+  useEffect(() => {
+    setData(prev => [...prev, 'new item']); // 不需要依赖 data
+  }, []);
+};
+```
 
-### 3. 竞态条件
+### Q2: 如何处理 useEffect 中的异步操作？
 
-问题：异步操作可能以错误的顺序完成。
-解决：使用清理函数或标志位来处理过期的请求。
+A: 处理异步操作时需要注意以下几点：
+1. 使用清理函数防止竞态条件
+2. 处理组件卸载情况
+3. 正确处理错误
+
+```typescript
+const Component = () => {
+  const [data, setData] = useState(null);
+  
+  useEffect(() => {
+    let ignore = false;
+    
+    async function fetchData() {
+      try {
+        const result = await api.getData();
+        if (!ignore) {
+          setData(result);
+        }
+      } catch (error) {
+        if (!ignore) {
+          console.error(error);
+        }
+      }
+    }
+    
+    fetchData();
+    return () => { ignore = true; };
+  }, []);
+};
+```
+
+### Q3: useEffect 和 useLayoutEffect 如何选择？
+
+A: 选择依据如下：
+
+1. **使用 useEffect 的场景**：
+   - 数据获取
+   - 订阅设置
+   - 手动 DOM 修改
+   - 日志记录
+
+2. **使用 useLayoutEffect 的场景**：
+   - 需要同步测量 DOM
+   - 需要在浏览器重绘前更新 DOM
+   - 需要避免视觉闪烁
+
+```typescript
+// ❌ 错误：使用 useEffect 可能导致闪烁
+const Component = () => {
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  
+  useEffect(() => {
+    const element = elementRef.current;
+    const rect = element.getBoundingClientRect();
+    setPosition({ x: rect.left, y: rect.top });
+  }, []);
+};
+
+// ✅ 正确：使用 useLayoutEffect 避免闪烁
+const Component = () => {
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  
+  useLayoutEffect(() => {
+    const element = elementRef.current;
+    const rect = element.getBoundingClientRect();
+    setPosition({ x: rect.left, y: rect.top });
+  }, []);
+};
+```
+
+### Q4: 如何优化 useEffect 的性能？
+
+A: 以下是一些优化 useEffect 性能的建议：
+
+1. 正确设置依赖数组
+2. 使用防抖和节流
+3. 避免不必要的状态更新
+4. 拆分复杂的 Effect
+
+```typescript
+// ❌ 性能问题：依赖项过多，频繁触发
+const Component = ({ data, filter, sort }) => {
+  const [processed, setProcessed] = useState([]);
+  
+  useEffect(() => {
+    setProcessed(data.filter(filter).sort(sort));
+  }, [data, filter, sort]); // 任何依赖变化都会触发
+};
+
+// ✅ 优化：使用 useMemo 和拆分 Effect
+const Component = ({ data, filter, sort }) => {
+  const [processed, setProcessed] = useState([]);
+  
+  const filteredData = useMemo(() => {
+    return data.filter(filter);
+  }, [data, filter]);
+  
+  useEffect(() => {
+    setProcessed(filteredData.sort(sort));
+  }, [filteredData, sort]);
+};
+```
+   - 用于大多数副作用操作
+   - 异步执行，不阻塞渲染
+   - 性能更好
+
+2. useLayoutEffect：
+   - 用于需要同步 DOM 测量和更新的场景
+   - 同步执行，会阻塞渲染
+   - 用于避免视觉闪烁
+
+### 如何优化 useEffect 的性能？
+
+性能优化建议：
+1. 正确设置依赖数组
+2. 避免不必要的依赖
+3. 使用防抖和节流
+4. 将复杂计算移到 Effect 外
+
+```typescript
+// ❌ 性能差：不必要的依赖
+const Component = ({ data }) => {
+  useEffect(() => {
+    const transformedData = heavyTransform(data);
+    // 使用 transformedData
+  }, [data]); // 每次 data 变化都会执行复杂计算
+};
+
+// ✅ 性能好：使用 useMemo 缓存计算结果
+const Component = ({ data }) => {
+  const transformedData = useMemo(() => {
+    return heavyTransform(data);
+  }, [data]);
+  
+  useEffect(() => {
+    // 使用 transformedData
+  }, [transformedData]);
+};
+```
+
+### useEffect 的依赖数组为空数组和不传依赖数组有什么区别？
+
+这两种情况有着本质的区别：
+
+```tsx
+// 空依赖数组示例
+useEffect(() => {
+  // 只在组件挂载时执行一次
+  fetchData();
+  return () => {
+    // 组件卸载时执行清理
+    cleanup();
+  };
+}, []); // 空依赖数组
+
+// 不传依赖数组示例
+useEffect(() => {
+  // 每次渲染后都会执行
+  updateUI();
+}); // 没有依赖数组
+```
+
+### 如何正确处理 useEffect 中的异步操作？
+
+处理异步操作时需要注意清理和竞态条件：
+
+```tsx
+// 问题：可能的竞态条件
+const Component = () => {
+  const [data, setData] = useState(null);
+  
+  useEffect(() => {
+    fetchData().then(result => {
+      setData(result); // 可能在组件卸载后执行
+    });
+  }, []);
+};
+
+// 解决方案：使用清理函数
+const Component = () => {
+  const [data, setData] = useState(null);
+  
+  useEffect(() => {
+    let mounted = true;
+    
+    const loadData = async () => {
+      try {
+        const result = await fetchData();
+        if (mounted) {
+          setData(result);
+        }
+      } catch (error) {
+        if (mounted) {
+          console.error(error);
+        }
+      }
+    };
+    
+    loadData();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+};
+```
+   - 通常是一个错误，因为会导致不必要的 effect 执行
+   - 可能引起性能问题
+
+```tsx
+// ✅ 只在挂载时执行一次
+useEffect(() => {
+  // 初始化操作
+  const data = fetchInitialData();
+  return () => {
+    // 清理操作
+    cleanup(data);
+  };
+}, []); // 空依赖数组
+
+// ❌ 每次渲染后都执行
+useEffect(() => {
+  // 这会在每次渲染后执行
+  document.title = `${count}`;
+}); // 没有依赖数组
+```
+
+### 如何处理 useEffect 中的异步操作？
+
+在 useEffect 中处理异步操作需要注意以下几点：
+
+1. **使用清理函数防止竞态条件**
+2. **处理组件卸载后的状态更新**
+3. **正确处理错误情况**
+
+```tsx
+const AsyncComponent = () => {
+  const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function fetchData() {
+      try {
+        const result = await api.getData();
+        if (isMounted) {
+          setData(result);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setError(error);
+        }
+      }
+    }
+
+    fetchData();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  if (error) return <div>Error: {error.message}</div>;
+  if (!data) return <div>Loading...</div>;
+  return <div>{data}</div>;
+};
+```
+
+### 为什么有时候会遇到无限循环问题？
+
+无限循环是 useEffect 中常见的问题，通常由以下原因导致：
+
+1. **在 effect 中更新了作为依赖项的状态**
+2. **依赖项中包含了每次渲染都会变化的值**
+3. **依赖项数组缺失必要的依赖**
+
+```tsx
+// ❌ 错误示例：导致无限循环
+const [data, setData] = useState([]);
+
+useEffect(() => {
+  setData([...data, newItem]); // 更新依赖项中的状态
+}, [data]); // data 变化会触发 effect，形成循环
+
+// ✅ 正确示例：使用函数式更新
+useEffect(() => {
+  setData(prevData => [...prevData, newItem]);
+}, []); // 不依赖于 data
+
+// ❌ 错误示例：依赖项是每次渲染都会变化的对象
+useEffect(() => {
+  doSomething(options); // options 是组件内新建的对象
+}, [options]); // 每次渲染 options 都是新的引用
+
+// ✅ 正确示例：使用 useMemo 缓存对象
+const options = useMemo(() => ({
+  // 配置选项
+}), [/* 相关依赖 */]);
+
+useEffect(() => {
+  doSomething(options);
+}, [options]); // options 的引用保持稳定
+```
+
+### 如何正确清理副作用？
+
+正确清理副作用是避免内存泄漏和意外行为的关键：
+
+1. **始终返回清理函数处理：**
+   - 订阅
+   - 定时器
+   - DOM 事件
+   - WebSocket 连接
+
+2. **确保资源正确释放**
+3. **使用布尔标志处理异步操作**
+
+```tsx
+const SubscriptionComponent = () => {
+  useEffect(() => {
+    // 设置订阅
+    const subscription = data.subscribe();
+    
+    // 设置定时器
+    const timer = setInterval(() => {
+      // 定时操作
+    }, 1000);
+    
+    // 添加事件监听
+    window.addEventListener('resize', handleResize);
+    
+    // 清理函数
+    return () => {
+      subscription.unsubscribe();
+      clearInterval(timer);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [data]);
+};
+
+// 处理异步操作
+const AsyncComponent = () => {
+  useEffect(() => {
+    let isActive = true;
+    
+    async function fetchData() {
+      try {
+        const result = await api.getData();
+        if (isActive) {
+          // 只在组件仍然挂载时更新状态
+          processData(result);
+        }
+      } catch (error) {
+        if (isActive) {
+          handleError(error);
+        }
+      }
+    }
+    
+    fetchData();
+    return () => {
+      isActive = false;
+    };
+  }, []);
+};
+```
+
+### useEffect 和 useLayoutEffect 该用哪个？
+
+选择使用哪个 Hook 取决于具体的使用场景：
+
+1. **useEffect（推荐）**
+   - 不会阻塞浏览器渲染
+   - 适用于大多数副作用操作
+   - 性能更好
+
+2. **useLayoutEffect（特殊场景）**
+   - 在浏览器重新绘制屏幕之前同步执行
+   - 会阻塞视觉更新
+   - 适用于需要同步测量和更新 DOM 的场景
+
+```tsx
+// ❌ 使用 useEffect 可能会看到闪烁
+const FlickerComponent = () => {
+  const [width, setWidth] = useState(0);
+  
+  useEffect(() => {
+    // 测量 DOM 并更新状态
+    const measuredWidth = element.getBoundingClientRect().width;
+    setWidth(measuredWidth);
+  }, []); // 可能会看到内容闪烁
+  
+  return <div style={{ width }}>内容</div>;
+};
+
+// ✅ 使用 useLayoutEffect 避免闪烁
+const SmoothComponent = () => {
+  const [width, setWidth] = useState(0);
+  
+  useLayoutEffect(() => {
+    // 在浏览器重新绘制前同步更新
+    const measuredWidth = element.getBoundingClientRect().width;
+    setWidth(measuredWidth);
+  }, []); // 不会看到内容闪烁
+  
+  return <div style={{ width }}>内容</div>;
+};
+```
+
+选择建议：
+1. 默认使用 useEffect
+2. 只在出现视觉闪烁或需要同步 DOM 测量时使用 useLayoutEffect
+3. 注意性能影响，尽量减少 useLayoutEffect 中的计算量
 
 ## 相关资源
 

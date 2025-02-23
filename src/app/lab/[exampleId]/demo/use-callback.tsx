@@ -1,11 +1,17 @@
-'use client';
+"use client";
 
-import React, { useState, useCallback, memo, useEffect, useMemo } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
-import { Markdown } from '@/components/markdown';
+import React, { useState, useCallback, memo, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Markdown } from "@/components/markdown";
 
 // 简单计数器示例
 const SimpleCounterExample = () => {
@@ -14,12 +20,12 @@ const SimpleCounterExample = () => {
 
   // 不使用 useCallback 的函数
   const incrementWithoutCallback = () => {
-    setCount1(c => c + 1);
+    setCount1((c) => c + 1);
   };
 
   // 使用 useCallback 的函数
   const incrementWithCallback = useCallback(() => {
-    setCount2(c => c + 1);
+    setCount2((c) => c + 1);
   }, []); // 依赖数组为空，因为我们不需要任何外部变量
 
   return (
@@ -87,7 +93,7 @@ const CounterButton = memo(({ onIncrement, count, label }) => {
 
 // 搜索示例
 const SearchExample = () => {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
   const [results, setResults] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -96,7 +102,7 @@ const SearchExample = () => {
     setLoading(true);
     try {
       // 模拟API延迟
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
       // 模拟搜索结果
       const mockResults = [
         `结果 1 (${searchQuery})`,
@@ -110,12 +116,15 @@ const SearchExample = () => {
   }, []); // 空依赖数组，因为这是一个稳定的函数
 
   // 使用 useCallback 优化防抖函数
-  const debouncedSearch = useCallback((value: string) => {
-    const timeoutId = setTimeout(() => {
-      searchAPI(value);
-    }, 300);
-    return () => clearTimeout(timeoutId);
-  }, [searchAPI]);
+  const debouncedSearch = useCallback(
+    (value: string) => {
+      const timeoutId = setTimeout(() => {
+        searchAPI(value);
+      }, 300);
+      return () => clearTimeout(timeoutId);
+    },
+    [searchAPI]
+  );
 
   // 在输入变化时触发搜索
   useEffect(() => {
@@ -216,7 +225,7 @@ const ListExample = () => {
 
   // 使用 useCallback 优化列表项处理函数
   const handleItemClick = useCallback((id: number) => {
-    setSelectedItems(prev => {
+    setSelectedItems((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(id)) {
         newSet.delete(id);
@@ -229,7 +238,7 @@ const ListExample = () => {
 
   // 添加新项
   const addItem = useCallback(() => {
-    setItems(prev => [...prev, Date.now()]);
+    setItems((prev) => [...prev, Date.now()]);
   }, []);
 
   // 清除选择
@@ -246,12 +255,14 @@ const ListExample = () => {
         </p>
         <div className="space-x-2">
           <Button onClick={addItem}>添加项目</Button>
-          <Button variant="outline" onClick={clearSelection}>清除选择</Button>
+          <Button variant="outline" onClick={clearSelection}>
+            清除选择
+          </Button>
         </div>
       </div>
 
       <div className="space-y-2">
-        {items.map(id => (
+        {items.map((id) => (
           <ListItem
             key={id}
             id={id}
@@ -327,12 +338,12 @@ const PerformanceExample = () => {
 
   // 不使用 useCallback 的函数 - 每次渲染都会创建新函数
   const normalHandler = () => {
-    setCount1(c => c + 1);
+    setCount1((c) => c + 1);
   };
 
   // 使用 useCallback 的函数 - 函数被缓存
   const optimizedHandler = useCallback(() => {
-    setCount2(c => c + 1);
+    setCount2((c) => c + 1);
   }, []);
 
   // 重置统计
@@ -345,11 +356,11 @@ const PerformanceExample = () => {
 
   // 使用 useCallback 包装 onRender 函数
   const onNormalRender = useCallback(() => {
-    setRenderCounts(prev => ({ ...prev, normal: prev.normal + 1 }));
+    setRenderCounts((prev) => ({ ...prev, normal: prev.normal + 1 }));
   }, []);
 
   const onOptimizedRender = useCallback(() => {
-    setRenderCounts(prev => ({ ...prev, optimized: prev.optimized + 1 }));
+    setRenderCounts((prev) => ({ ...prev, optimized: prev.optimized + 1 }));
   }, []);
 
   // 触发父组件重渲染的函数
@@ -357,7 +368,7 @@ const PerformanceExample = () => {
     // 连续触发多次重渲染，让效果更明显
     for (let i = 0; i < 3; i++) {
       setTimeout(() => {
-        setOtherState(s => s + 1);
+        setOtherState((s) => s + 1);
       }, i * 100);
     }
   };
@@ -369,9 +380,13 @@ const PerformanceExample = () => {
         <div className="text-muted-foreground space-y-2 bg-muted p-4 rounded-lg">
           <p className="font-medium text-primary">实验步骤：</p>
           <ol className="list-decimal list-inside space-y-1">
-            <li>先点击"重置统计"按钮，清空所有计数</li>
-            <li>点击"触发重渲染"按钮<strong>多次</strong>，观察两边的重渲染次数</li>
-            <li>你会发现：
+            <li>先点击&quot;重置统计&quot;按钮，清空所有计数</li>
+            <li>
+              点击&quot;触发重渲染&quot;按钮<strong>多次</strong>
+              ，观察两边的重渲染次数
+            </li>
+            <li>
+              你会发现：
               <ul className="list-disc list-inside ml-4 mt-1">
                 <li>左边（不使用 useCallback）的重渲染次数会快速增加</li>
                 <li>右边（使用 useCallback）的重渲染次数不会增加</li>
@@ -439,7 +454,9 @@ const PerformanceExample = () => {
           <CardContent>
             <div className="prose-sm space-y-4">
               <div className="space-y-2">
-                <p className="font-medium">不使用 useCallback 的情况（左边）：</p>
+                <p className="font-medium">
+                  不使用 useCallback 的情况（左边）：
+                </p>
                 <div className="ml-4 space-y-1">
                   <p>1. 每次父组件重渲染，都会创建一个新的函数</p>
                   <p>2. 新函数 !== 旧函数，即使它们功能完全一样</p>
@@ -463,75 +480,89 @@ const PerformanceExample = () => {
 };
 
 // 简化的统计按钮组件
-const SimpleStatButton = memo(({ 
-  onIncrement, 
-  count, 
-  onRender, 
-  label
-}: {
-  onIncrement: () => void;
-  count: number;
-  onRender: () => void;
-  label: string;
-}) => {
-  // 记录渲染次数
-  useEffect(() => {
-    onRender();
-  }, [count, onRender]);
+const SimpleStatButton = memo(
+  ({
+    onIncrement,
+    count,
+    onRender,
+    label,
+  }: {
+    onIncrement: () => void;
+    count: number;
+    onRender: () => void;
+    label: string;
+  }) => {
+    // 记录渲染次数
+    useEffect(() => {
+      onRender();
+    }, [count, onRender]);
 
-  return (
-    <Button onClick={onIncrement} className="w-full">
-      {label}: {count}
-    </Button>
-  );
-});
+    return (
+      <Button onClick={onIncrement} className="w-full">
+        {label}: {count}
+      </Button>
+    );
+  }
+);
 
-SimpleStatButton.displayName = 'SimpleStatButton';
+SimpleStatButton.displayName = "SimpleStatButton";
 
 // 子组件：计数器按钮
-const CounterButton = memo(({ onIncrement, count, label }: {
-  onIncrement: () => void;
-  count: number;
-  label: string;
-}) => {
-  console.log(`${label} 组件重新渲染`);
-  return (
-    <Card className="mb-4">
-      <CardHeader>
-        <CardTitle className="text-lg">{label}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="flex items-center gap-4">
-          <span className="text-2xl font-bold">{count}</span>
-          <Button onClick={onIncrement}>增加</Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
-});
+const CounterButton = memo(
+  ({
+    onIncrement,
+    count,
+    label,
+  }: {
+    onIncrement: () => void;
+    count: number;
+    label: string;
+  }) => {
+    console.log(`${label} 组件重新渲染`);
+    return (
+      <Card className="mb-4">
+        <CardHeader>
+          <CardTitle className="text-lg">{label}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-4">
+            <span className="text-2xl font-bold">{count}</span>
+            <Button onClick={onIncrement}>增加</Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+);
 
-CounterButton.displayName = 'CounterButton';
+CounterButton.displayName = "CounterButton";
 
 // 子组件：列表项
-const ListItem = memo(({ id, selected, onClick }: {
-  id: number;
-  selected: boolean;
-  onClick: (id: number) => void;
-}) => {
-  console.log(`列表项 ${id} 重新渲染`);
-  return (
-    <div
-      className={`p-4 border rounded cursor-pointer transition-colors ${
-        selected ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
-      }`}
-      onClick={() => onClick(id)}
-    >
-      项目 {id}
-    </div>
-  );
-});
+const ListItem = memo(
+  ({
+    id,
+    selected,
+    onClick,
+  }: {
+    id: number;
+    selected: boolean;
+    onClick: (id: number) => void;
+  }) => {
+    console.log(`列表项 ${id} 重新渲染`);
+    return (
+      <div
+        className={`p-4 border rounded cursor-pointer transition-colors ${
+          selected ? "bg-primary text-primary-foreground" : "hover:bg-muted"
+        }`}
+        onClick={() => onClick(id)}
+      >
+        项目 {id}
+      </div>
+    );
+  }
+);
 
-ListItem.displayName = 'ListItem';
+ListItem.displayName = "ListItem";
 
 // 文档说明
 const explanation = `

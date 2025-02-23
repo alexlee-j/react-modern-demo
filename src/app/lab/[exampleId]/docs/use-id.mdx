@@ -1,0 +1,162 @@
+
+# useId
+
+`useId` 是 React 18 新增的一个 Hook，用于生成稳定的唯一标识符。它主要用于生成 HTML 元素的 id 属性，特别适合在需要关联标签和表单控件、WAI-ARIA 属性等场景中使用。
+
+## API 说明
+
+```typescript
+const id = useId();
+```
+
+### 返回值
+
+- `string`：返回一个唯一的标识符字符串
+
+### 特点
+
+- 生成稳定的唯一标识符
+- 支持服务端渲染（SSR）
+- 确保客户端水合一致性
+- 不接受任何参数
+
+## 使用场景
+
+### 1. 表单标签关联
+
+使用 `useId` 生成唯一的 id 来关联表单标签和输入框：
+
+```tsx
+const FormField = ({ label, type = "text" }) => {
+  const id = useId();
+  return (
+    <div>
+      <label htmlFor={id}>{label}</label>
+      <input id={id} type={type} />
+    </div>
+  );
+};
+```
+
+### 2. WAI-ARIA 属性关联
+
+用于关联 ARIA 属性，提升无障碍访问性：
+
+```tsx
+const Dialog = () => {
+  const titleId = useId();
+  const descriptionId = useId();
+
+  return (
+    <div
+      role="dialog"
+      aria-labelledby={titleId}
+      aria-describedby={descriptionId}
+    >
+      <h2 id={titleId}>对话框标题</h2>
+      <p id={descriptionId}>对话框描述内容</p>
+    </div>
+  );
+};
+```
+
+### 3. 多个相关元素的 ID 前缀
+
+使用单个 `useId` 作为前缀来生成多个相关元素的 ID：
+
+```tsx
+const ComplexForm = () => {
+  const baseId = useId();
+
+  return (
+    <form>
+      <label htmlFor={`${baseId}-name`}>姓名</label>
+      <input id={`${baseId}-name`} />
+      
+      <label htmlFor={`${baseId}-email`}>邮箱</label>
+      <input id={`${baseId}-email`} type="email" />
+    </form>
+  );
+};
+```
+
+## 最佳实践
+
+### 1. 避免不必要的使用
+
+- 不要用于生成列表的 key
+- 不要用于纯展示用途的 id
+- 仅在需要稳定、唯一标识符时使用
+
+### 2. 服务端渲染注意事项
+
+- 确保服务端和客户端使用相同的 React 版本
+- 避免在服务端和客户端使用不同的 id 生成方式
+- 使用 `useId` 替代随机数或递增计数器
+
+### 3. 性能优化
+
+- 在需要多个 ID 时复用同一个 `useId` 的结果
+- 避免在每次渲染时都生成新的 ID
+
+```tsx
+// ✅ 好的做法
+const id = useId();
+const inputId = `${id}-input`;
+const labelId = `${id}-label`;
+
+// ❌ 不好的做法
+const inputId = useId();
+const labelId = useId();
+```
+
+### 4. 无障碍访问
+
+- 使用 `useId` 确保 ARIA 属性的正确关联
+- 保持 ID 的稳定性，避免动态变化
+- 遵循 WAI-ARIA 最佳实践
+
+## 常见问题
+
+### 1. 服务端渲染不匹配
+
+如果遇到服务端渲染不匹配的问题，检查：
+
+- React 版本是否一致
+- 是否在同一个组件中使用了不同的 ID 生成方式
+- 组件树结构是否一致
+
+### 2. ID 重复
+
+如果遇到 ID 重复的问题：
+
+- 确保每个组件实例都使用自己的 `useId`
+- 避免手动拼接可能导致冲突的字符串
+- 使用更具描述性的前缀  
+
+## 注意事项
+
+1. `useId` 不应该用于生成列表的 keys，应该使用数据的唯一标识符或索引
+2. 生成的 ID 字符串可能包含特殊字符，这是正常的
+3. 不要尝试解析或修改 `useId` 生成的字符串
+4. 在开发模式下，ID 的格式可能与生产模式不同
+
+## 与其他方案对比
+
+| 方案 | SSR 支持 | 稳定性 | 性能 | 推荐场景 |
+|------|----------|--------|------|----------|
+| useId | ✅ 完全支持 | 高 | 好 | 所有场景 |
+| Math.random() | ❌ 不支持 | 低 | 好 | 仅客户端渲染 |
+| 递增计数器 | 🟡 部分支持 | 中 | 好 | 简单场景 |
+| uuid | ✅ 支持 | 高 | 一般 | 需要完全随机性 |
+
+## 总结
+
+`useId` 是 React 18 中一个非常实用的 Hook，它解决了在 SSR 场景下生成唯一标识符的问题。通过正确使用 `useId`，我们可以：
+
+- 确保服务端渲染的一致性
+- 提升应用的无障碍访问性
+- 简化表单和 ARIA 属性的关联
+- 避免手动管理 ID 带来的问题
+
+在实际开发中，应该根据具体场景选择合适的 ID 生成方案，对于需要 SSR 支持和稳定性的场景，`useId` 是最佳选择。

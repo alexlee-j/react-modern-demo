@@ -1,23 +1,26 @@
 # React Hooks 开发状态
 
 ## 基础 Hooks
+
 - [x] useState - 状态管理基础
 - [x] useEffect - 副作用处理
 - [x] useContext - 跨组件状态共享
 - [x] useReducer - 复杂状态管理
 - [x] useCallback - 函数记忆化
 - [x] useMemo - 值记忆化
-- [x] useRef - DOM引用和值持久化
+- [x] useRef - DOM 引用和值持久化
 
 ## 进阶 Hooks
-- [ ] useImperativeHandle
-- [ ] useLayoutEffect
-- [ ] useDebugValue
-- [ ] useId
-- [ ] useDeferredValue
-- [ ] useTransition
+
+- [x] useImperativeHandle
+- [x] useLayoutEffect
+- [x] useDebugValue
+- [x] useId
+- [x] useDeferredValue
+- [x] useTransition
 
 ## 自定义 Hooks
+
 - [ ] useLocalStorage
 - [ ] useTheme
 - [ ] useMediaQuery
@@ -26,6 +29,7 @@
 ## 详细进度
 
 ### useMemo ✅
+
 - 基础示例完成
   - 文本处理示例
   - 数组处理示例（5000 元素，50 次计算）
@@ -43,7 +47,8 @@
   - 错误处理
   - 性能监控
 
-### useRef 🚧
+### useRef ✅
+
 - 入口添加完成
   - 已添加到示例列表
   - 已设置正确的分类
@@ -57,3 +62,94 @@
   - [x] 示例代码
   - [x] 最佳实践
   - [x] 常见问题
+
+### useImperativeHandle ✅
+
+- 基础示例完成
+  - 表单控制示例
+  - 完整的类型定义
+  - 错误处理和状态反馈
+- 交互优化完成
+  - Toast 提示
+  - 状态可视化
+  - 操作记录
+- 文档完善
+  - 使用生动比喻
+  - 丰富的代码示例
+  - 完整的最佳实践
+- 性能优化
+  - useCallback 优化
+  - 依赖管理
+  - 错误边界处理
+
+### useLayoutEffect ✅
+
+- 基础示例完成
+  - DOM 测量和更新示例
+  - 动画过渡效果
+  - 布局计算优化
+- 性能对比完成
+  - useEffect vs useLayoutEffect
+  - 渲染时机分析
+  - 性能数据统计
+- 文档完善
+  - 原理解析
+  - 最佳实践指南
+  - 常见陷阱提醒
+- 代码优化
+  - 依赖项管理
+  - 性能监控
+  - 错误处理
+
+### useDebugValue ✅
+
+- 基础示例完成
+  - 自定义 Hook 调试示例
+  - 条件格式化实现
+  - 性能优化方案
+- 开发工具集成
+  - React DevTools 联动
+  - 调试信息展示优化
+  - 性能分析工具
+- 文档完善
+  - 使用场景详解
+  - 调试技巧分享
+  - 最佳实践指南
+- 性能优化
+  - 格式化函数优化
+  - 开发环境配置
+  - 生产环境处理
+
+### useDeferredValue ✅
+
+- 基础示例完成
+  - 搜索防抖示例
+  - 列表渲染优化
+  - 数据加载状态处理
+- 性能对比完成
+  - 与 useTransition 对比
+  - 渲染优先级分析
+  - 性能数据统计
+- 文档完善
+  - 原理解析
+  - 最佳实践指南
+  - 使用场景说明
+- 代码优化
+  - 依赖项管理
+  - 性能监控
+  - 错误边界处理
+
+### useId ✅
+
+- 基础示例完成
+  - 基础用法示例
+  - 表单组件集成
+  - 无障碍访问示例
+- 文档完善
+  - 要点解析
+  - 最佳实践
+  - 常见问题
+- 代码优化
+  - 服务端渲染兼容
+  - 性能考虑
+  - 错误处理

@@ -1,0 +1,414 @@
+# useDeferredValue 示例
+
+## React 19 新特性
+
+React 19 中的 `useDeferredValue` 在并发渲染方面有了显著改进：
+
+- 更智能的调度策略
+- 更好的性能优化
+- 与 Suspense 的深度整合
+
+## 实际应用场景
+
+### 1. 实时搜索优化
+
+```tsx
+import { useState, useDeferredValue, useEffect, Suspense } from 'react';
+
+function SearchBox() {
+  const [query, setQuery] = useState('');
+  const deferredQuery = useDeferredValue(query);
+
+  return (
+    <div className="search-container">
+      <input
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="输入关键词搜索..."
+      />
+      <Suspense fallback={<div>加载中...</div>}>
+        <SearchResults query={deferredQuery} />
+      </Suspense>
+    </div>
+  );
+}
+
+// 搜索结果组件
+function SearchResults({ query }) {
+  const [results, setResults] = useState([]);
+  const [isStale, setIsStale] = useState(false);
+
+  useEffect(() => {
+    setIsStale(true);
+    // 模拟 API 调用
+    const timer = setTimeout(async () => {
+      const response = await fetch(`/api/search?q=${query}`);
+      const data = await response.json();
+      setResults(data);
+      setIsStale(false);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  return (
+    <div style={{ opacity: isStale ? 0.5 : 1 }}>
+      {results.map((item) => (
+        <div key={item.id} className="search-item">
+          <h3>{item.title}</h3>
+          <p>{item.description}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+### 2. 大数据列表渲染
+
+```tsx
+import { useState, useDeferredValue, useMemo, useTransition } from 'react';
+
+function DataList() {
+  const [filter, setFilter] = useState('');
+  const deferredFilter = useDeferredValue(filter);
+  const [isPending, startTransition] = useTransition();
+
+  // 生成大量数据
+  const items = useMemo(() => {
+    return Array.from({ length: 10000 }, (_, index) => ({
+      id: index,
+      text: `Item ${index}`,
+      description: `Description for item ${index}`
+    }));
+  }, []);
+
+  // 使用 Performance API 监控性能
+  const startTime = performance.now();
+
+  const filteredItems = useMemo(() => {
+    console.log(`使用过滤器: ${deferredFilter}`);
+    const endTime = performance.now();
+    console.log(`过滤耗时: ${endTime - startTime}ms`);
+
+    return items.filter(item =>
+      item.text.toLowerCase().includes(deferredFilter.toLowerCase())
+    );
+  }, [deferredFilter, items]);
+
+  // 对比 useTransition 的实现
+  const handleTransitionFilter = (value) => {
+    startTransition(() => {
+      setFilter(value);
+    });
+  };
+
+  return (
+    <div className="data-list-container">
+      <div className="controls">
+        <div>
+          <h4>使用 useDeferredValue</h4>
+          <input
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            placeholder="输入过滤条件..."
+          />
+        </div>
+        <div>
+          <h4>使用 useTransition</h4>
+          <input
+            onChange={(e) => handleTransitionFilter(e.target.value)}
+            placeholder="输入过滤条件..."
+          />
+          {isPending && <span className="pending-indicator">更新中...</span>}
+        </div>
+      </div>
+
+      <div className="performance-metrics">
+        <h3>性能指标</h3>
+        <ul>
+          <li>数据量: {items.length} 条</li>
+          <li>过滤后数量: {filteredItems.length} 条</li>
+          <li>内存使用: {(performance.memory?.usedJSHeapSize / 1024 / 1024).toFixed(2)} MB</li>
+        </ul>
+      </div>
+
+      <div className="results-container">
+        {filteredItems.map(item => (
+          <div key={item.id} className="list-item">
+            <h3>{item.text}</h3>
+            <p>{item.description}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+```
+
+### 3. 性能分析与最佳实践
+
+#### 使用场景对比
+
+| 特性 | useDeferredValue | useTransition |
+|------|-----------------|---------------|
+| 控制方式 | 被动（值延迟） | 主动（状态更新） |
+| 使用场景 | 外部数据/Props | 内部状态更新 |
+| UI 反馈 | 需手动实现 | 内置 isPending |
+| 实现复杂度 | 较简单 | 相对复杂 |
+
+#### 性能优化建议
+
+1. 合理设置延迟阈值
+```tsx
+const deferredValue = useDeferredValue(value, { timeoutMs: 2000 });
+```
+
+2. 配合 Suspense 使用
+```tsx
+<Suspense fallback={<Skeleton />}>
+  <DeferredComponent value={deferredValue} />
+</Suspense>
+```
+
+3. 使用 Chrome DevTools 性能分析
+- 开启 React DevTools 的 Profiler
+- 监控 Performance 面板中的渲染时间
+- 分析内存使用情况
+
+#### 注意事项
+
+1. 避免过度使用
+- 只在处理大量数据或复杂计算时使用
+- 简单的 UI 更新不需要延迟
+
+2. 合理的降级策略
+- 提供加载状态指示
+- 实现部分加载功能
+- 考虑服务端分页
+
+## 性能分析
+
+### 1. 渲染时间对比
+
+```tsx
+import { useState, useDeferredValue, useEffect } from 'react';
+
+function PerformanceComparison() {
+  const [text, setText] = useState('');
+  const deferredText = useDeferredValue(text);
+
+  // 常规渲染
+  useEffect(() => {
+    const start = performance.now();
+    // 模拟耗时操作
+    for (let i = 0; i < 10000; i++) {
+      const div = document.createElement('div');
+      div.textContent = text;
+    }
+    console.log(`常规渲染耗时: ${performance.now() - start}ms`);
+  }, [text]);
+
+  // 延迟渲染
+  useEffect(() => {
+    const start = performance.now();
+    // 相同的耗时操作
+    for (let i = 0; i < 10000; i++) {
+      const div = document.createElement('div');
+      div.textContent = deferredText;
+    }
+    console.log(`延迟渲染耗时: ${performance.now() - start}ms`);
+  }, [deferredText]);
+
+  return (
+    <div>
+      <input
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        placeholder="输入文本测试性能"
+      />
+      <div>实时文本: {text}</div>
+      <div>延迟文本: {deferredText}</div>
+    </div>
+  );
+}
+```
+
+## 基础用法
+
+`useDeferredValue` 是 React 18 引入的新 Hook，用于处理非紧急的 UI 更新。它可以让你延迟更新某些不太重要的部分，优先处理更重要的更新。
+
+```tsx
+import { useState, useDeferredValue } from 'react';
+
+function SearchResults({ query }) {
+  // 创建一个延迟值
+  const deferredQuery = useDeferredValue(query);
+  
+  return (
+    <div>
+      <p>延迟的搜索查询: {deferredQuery}</p>
+      {/* 使用 deferredQuery 进行搜索结果渲染 */}
+    </div>
+  );
+}
+```
+
+## 性能优化示例
+
+### 1. 大列表渲染优化
+
+在处理大量数据渲染时，`useDeferredValue` 可以显著提升用户体验：
+
+```tsx
+import { useState, useDeferredValue, useMemo } from 'react';
+
+function SlowList({ text }) {
+  const deferredText = useDeferredValue(text);
+  const items = useMemo(() => {
+    // 生成 5000 个列表项
+    const result = [];
+    for (let i = 0; i < 5000; i++) {
+      result.push(<div key={i}>{deferredText}</div>);
+    }
+    return result;
+  }, [deferredText]);
+
+  return (
+    <div style={{ opacity: text === deferredText ? 1 : 0.5 }}>
+      {items}
+    </div>
+  );
+}
+```
+
+### 2. 搜索建议优化
+
+实现一个高性能的搜索建议功能：
+
+```tsx
+import { useState, useDeferredValue, useEffect } from 'react';
+
+function SearchSuggestions({ searchText }) {
+  const deferredText = useDeferredValue(searchText);
+  const [suggestions, setSuggestions] = useState([]);
+
+  useEffect(() => {
+    // 模拟 API 调用
+    const getSuggestions = async () => {
+      const result = await fetch(`/api/suggestions?q=${deferredText}`);
+      const data = await result.json();
+      setSuggestions(data);
+    };
+
+    if (deferredText) {
+      getSuggestions();
+    }
+  }, [deferredText]);
+
+  return (
+    <ul>
+      {suggestions.map((item) => (
+        <li key={item.id}>{item.text}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+## 最佳实践
+
+### 1. 何时使用 useDeferredValue
+
+- 处理大量数据渲染
+- 实现搜索建议等需要频繁更新的功能
+- 优化用户输入体验
+- 处理非紧急的 UI 更新
+
+### 2. 注意事项
+
+```tsx
+// ❌ 错误：不要在紧急更新中使用
+function UrgentUpdate({ data }) {
+  const deferredData = useDeferredValue(data); // 不必要的延迟
+  return <div>{deferredData}</div>;
+}
+
+// ✅ 正确：用于非紧急的大量数据渲染
+function SlowComponent({ data }) {
+  const deferredData = useDeferredValue(data);
+  return <ExpensiveTree data={deferredData} />;
+}
+```
+
+### 3. 与其他 Hooks 配合
+
+```tsx
+import { useDeferredValue, useMemo, useEffect } from 'react';
+
+function OptimizedComponent({ data }) {
+  const deferredData = useDeferredValue(data);
+
+  // 配合 useMemo 使用
+  const processedData = useMemo(() => {
+    return processData(deferredData);
+  }, [deferredData]);
+
+  // 配合 useEffect 使用
+  useEffect(() => {
+    console.log('数据已更新:', deferredData);
+  }, [deferredData]);
+
+  return <div>{processedData}</div>;
+}
+```
+
+## 常见问题
+
+### Q1: useDeferredValue 和 useTransition 的区别？
+
+A: 
+- `useDeferredValue` 用于延迟值的更新
+- `useTransition` 用于标记状态更新的优先级
+- `useDeferredValue` 适用于外部数据
+- `useTransition` 适用于内部状态更新
+
+### Q2: 如何判断是否需要使用 useDeferredValue？
+
+A: 当满足以下条件时考虑使用：
+1. UI 更新导致明显的卡顿
+2. 更新不需要立即响应
+3. 处理大量数据或复杂计算
+
+## 性能优化建议
+
+1. 合理使用 useMemo
+```tsx
+// ✅ 好：配合 useMemo 优化
+const deferredValue = useDeferredValue(value);
+const expensive = useMemo(() => computeExpensive(deferredValue), [deferredValue]);
+```
+
+2. 添加加载状态提示
+```tsx
+const deferredValue = useDeferredValue(value);
+const isStale = deferredValue !== value;
+
+return (
+  <div style={{ opacity: isStale ? 0.5 : 1 }}>
+    {/* 内容 */}
+  </div>
+);
+```
+
+## 相关资源
+
+- [React 官方文档：useDeferredValue](https://react.dev/reference/react/useDeferredValue)
+- [性能优化指南](https://react.dev/learn/managing-state)
+- [并发模式介绍](https://react.dev/learn/concurrent-mode)
+
+## 下一步学习
+
+- useTransition：学习如何管理状态更新优先级
+- Suspense：了解数据加载和代码分割
+- 性能优化：探索更多 React 性能优化技巧
