@@ -198,4 +198,14 @@ export const examples: ExampleCard[] = [
     tags: ["hooks", "窗口", "响应式"],
     lastUpdated: new Date().toISOString(),
   },
+  {
+    id: "use",
+    title: "理解 use Hook",
+    description:
+      "学习如何使用 React 19 的 use Hook 来处理 Promise、数据获取和资源加载，包括缓存策略和错误处理。",
+    difficulty: 4,
+    category: "hooks",
+    tags: ["Promise", "数据获取", "资源加载", "hooks", "react"],
+    lastUpdated: new Date().toISOString(),
+  },
 ];
