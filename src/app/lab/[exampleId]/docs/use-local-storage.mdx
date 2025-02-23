@@ -1,0 +1,169 @@
+# useLocalStorage Hook
+
+## 基本用法
+
+```typescript
+function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((val: T) => T)) => void]
+```
+
+`useLocalStorage` 是一个自定义 Hook，用于在 React 组件中方便地使用 localStorage。它提供了类似 useState 的 API，但会自动将状态同步到本地存储。
+
+### 参数
+
+- `key`: string - localStorage 中使用的键名
+- `initialValue`: T - 初始值，当 localStorage 中没有对应数据时使用
+
+### 返回值
+
+返回一个元组，包含：
+
+- `[0]`: T - 当前存储的值
+- `[1]`: (value: T | ((val: T) => T)) => void - 更新函数
+
+## 示例
+
+### 基础用法
+
+```typescript
+const [name, setName] = useLocalStorage('user-name', '')
+
+// 直接设置新值
+setName('张三')
+
+// 基于之前的值更新
+setName(prev => prev + '李四')
+```
+
+### 存储对象
+
+```typescript
+const [user, setUser] = useLocalStorage('user-data', {
+  name: '',
+  age: 0
+})
+
+setUser({
+  name: '张三',
+  age: 25
+})
+```
+
+## 最佳实践
+
+### 1. 类型安全
+
+使用 TypeScript 泛型确保类型安全：
+
+```typescript
+interface User {
+  name: string
+  age: number
+}
+
+const [user, setUser] = useLocalStorage<User>('user', {
+  name: '',
+  age: 0
+})
+```
+
+### 2. 错误处理
+
+- 总是在 try-catch 块中处理 localStorage 操作
+- 提供合理的默认值作为回退
+- 处理序列化/反序列化错误
+
+### 3. 性能优化
+
+- 避免存储过大的数据
+- 考虑使用防抖/节流处理频繁更新
+- 适当使用数据过期机制
+
+## 注意事项
+
+1. **服务端渲染**
+   - 确保在客户端环境中访问 localStorage
+   - 使用条件检查 `typeof window !== 'undefined'`
+
+2. **存储限制**
+   - localStorage 通常限制在 5-10MB
+   - 注意处理存储超限错误
+
+3. **数据同步**
+   - 多标签页之间的数据同步需要额外处理
+   - 考虑使用 `storage` 事件监听变化
+
+## 高级用法
+
+### 数据过期处理
+
+```typescript
+interface StoredData<T> {
+  value: T
+  timestamp: number
+}
+
+const [data, setData] = useLocalStorage<StoredData<string>>(
+  'data',
+  { value: '', timestamp: Date.now() }
+)
+
+// 检查数据是否过期
+const isExpired = () => {
+  const ONE_HOUR = 60 * 60 * 1000
+  return Date.now() - data.timestamp > ONE_HOUR
+}
+```
+
+### 数据压缩
+
+对于较大的数据，可以考虑使用压缩：
+
+```typescript
+import { compress, decompress } from 'some-compression-lib'
+
+const setValue = (value: T) => {
+  const compressed = compress(JSON.stringify(value))
+  localStorage.setItem(key, compressed)
+}
+
+const getValue = () => {
+  const compressed = localStorage.getItem(key)
+  return JSON.parse(decompress(compressed))
+}
+```
+
+## 常见问题
+
+### Q: 如何处理 localStorage 不可用的情况？
+
+A: 可以在初始化时检查 localStorage 是否可用，如果不可用则回退到内存存储：
+
+```typescript
+const isLocalStorageAvailable = () => {
+  try {
+    localStorage.setItem('test', 'test')
+    localStorage.removeItem('test')
+    return true
+  } catch (e) {
+    return false
+  }
+}
+```
+
+### Q: 如何处理并发更新？
+
+A: 使用函数式更新确保状态更新的原子性：
+
+```typescript
+setData(prev => ({
+  ...prev,
+  count: prev.count + 1
+}))
+```
+
+### Q: 如何处理大量数据？
+
+A: 
+- 考虑分片存储
+- 使用 IndexedDB 替代
+- 实现数据清理策略

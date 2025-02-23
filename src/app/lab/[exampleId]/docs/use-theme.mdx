@@ -1,0 +1,207 @@
+# useTheme Hook
+
+`useTheme` Hook 提供了一个简单而强大的方式来管理应用的主题切换功能。它支持浅色、深色以及跟随系统主题三种模式，并能够自动持久化主题设置。
+
+## 基本用法
+
+```tsx
+import { useTheme } from "@/hooks/use-theme";
+
+const ThemeToggle = () => {
+  const { theme, setTheme } = useTheme();
+
+  return (
+    <Switch
+      checked={theme === "dark"}
+      onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
+    />
+  );
+};
+```
+
+## API 说明
+
+### 返回值
+
+- `theme`: 当前主题，可能的值为 "light" | "dark" | "system"
+- `setTheme`: 设置主题的函数，接受 "light" | "dark" | "system" 作为参数
+
+## 特性
+
+- 🌓 支持浅色/深色主题切换
+- 🔄 支持跟随系统主题
+- 💾 自动持久化主题设置
+- 🎨 使用 CSS 变量管理主题颜色
+
+## React 19 新特性集成
+
+### 1. use Hook 支持
+
+在 React 19 中，我们可以使用新的 `use` Hook 来优化主题状态的获取：
+
+```tsx
+import { use } from 'react';
+
+const ThemeAwareComponent = () => {
+  const theme = use(ThemeContext);
+  return <div>当前主题：{theme}</div>;
+};
+```
+
+### 2. 自动批处理优化
+
+React 19 的自动批处理特性可以优化主题切换时的性能：
+
+```tsx
+const ThemeController = () => {
+  const { setTheme } = useTheme();
+
+  const handleThemeChange = () => {
+    // React 19 会自动批处理这些更新
+    setTheme('dark');
+    updateThemeRelatedState();
+    triggerThemeTransition();
+  };
+};
+```
+
+### 3. 并发渲染支持
+
+利用 React 19 的并发特性处理主题切换：
+
+```tsx
+import { startTransition } from 'react';
+
+const ThemeSwitch = () => {
+  const { setTheme } = useTheme();
+
+  const handleThemeToggle = () => {
+    startTransition(() => {
+      setTheme('dark');
+    });
+  };
+};
+```
+
+## 服务端组件集成
+
+### 1. 服务端组件中的主题处理
+
+```tsx
+async function ThemeAwareServerComponent() {
+  // 在服务端获取默认主题
+  const defaultTheme = await getDefaultTheme();
+  
+  return (
+    <ThemeProvider defaultTheme={defaultTheme}>
+      <ClientThemeControls />
+    </ThemeProvider>
+  );
+}
+```
+
+### 2. 客户端组件与服务端组件协同
+
+```tsx
+'use client';
+
+const ClientThemeControls = () => {
+  const { theme, setTheme } = useTheme();
+  return <ThemeToggle />;
+};
+```
+
+## 性能优化
+
+### 1. 主题切换动画
+
+```tsx
+const ThemeTransition = () => {
+  const { theme } = useTheme();
+
+  return (
+    <div className="theme-transition" style={{
+      transition: 'background-color 0.3s ease',
+    }}>
+      {/* 内容 */}
+    </div>
+  );
+};
+```
+
+### 2. 选择性渲染
+
+```tsx
+import { memo } from 'react';
+
+const ThemeAwareComponent = memo(({ theme }) => {
+  return <div className={theme}>主题感知组件</div>;
+});
+```
+
+### 3. 状态分割
+
+```tsx
+const ThemeProvider = ({ children }) => {
+  const [themeState, setThemeState] = useState({
+    current: 'light',
+    previous: null,
+  });
+
+  // 分离主题切换逻辑
+  const handleThemeChange = useCallback((newTheme) => {
+    setThemeState(prev => ({
+      current: newTheme,
+      previous: prev.current,
+    }));
+  }, []);
+};
+```
+
+## 最佳实践
+
+1. **主题切换**
+   ```tsx
+   const { theme, setTheme } = useTheme();
+   
+   // 切换到深色主题
+   setTheme("dark");
+   
+   // 切换到浅色主题
+   setTheme("light");
+   
+   // 跟随系统主题
+   setTheme("system");
+   ```
+
+2. **主题状态判断**
+   ```tsx
+   const { theme } = useTheme();
+   
+   // 判断当前是否为深色主题
+   const isDarkTheme = theme === "dark";
+   ```
+
+3. **系统主题同步**
+   ```tsx
+   const { theme } = useTheme();
+   
+   // 获取系统主题
+   const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
+     ? "dark"
+     : "light";
+   ```
+
+## 注意事项
+
+1. 确保在应用根组件中包裹 ThemeProvider
+2. 避免频繁切换主题，可能影响性能
+3. 考虑主题切换时的过渡效果
+4. 使用 CSS 变量管理主题相关的样式
+5. 合理使用 React 19 的新特性优化性能
+6. 注意服务端组件和客户端组件的职责分离
+
+## 相关资源
+
+- [源代码实现](/src/hooks/use-theme.tsx)
+- [示例代码](/src/app/lab/[exampleId]/demo/use-theme.tsx)

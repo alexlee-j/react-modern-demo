@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import React from 'react';
 import "./globals.css";
+import { ThemeProvider } from "@/hooks/use-theme";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,8 +39,10 @@ export default function RootLayout({
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
-    <div className="portal-layout">
-      <main>{children}</main>
-    </div>
+    <ThemeProvider defaultTheme="system" storageKey="theme">
+      <div className="portal-layout">
+        <main>{children}</main>
+      </div>
+    </ThemeProvider>
   );
 };

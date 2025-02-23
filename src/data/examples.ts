@@ -158,4 +158,34 @@ export const examples: ExampleCard[] = [
     tags: ["动画", "hooks", "react", "过渡"],
     lastUpdated: new Date().toISOString(),
   },
+  {
+    id: "use-local-storage",
+    title: "使用 useLocalStorage 管理本地存储",
+    description:
+      "学习如何使用自定义 Hook 优雅地管理本地存储数据，包含数据同步、过期处理等功能。",
+    difficulty: 2,
+    category: "hooks",
+    tags: ["localStorage", "自定义Hook", "状态管理"],
+    lastUpdated: new Date().toISOString(),
+  },
+  {
+    id: "use-theme",
+    title: "使用 useTheme 实现主题管理",
+    description:
+      "学习如何使用自定义 Hook 实现主题管理功能，包括主题切换、系统主题同步等特性。",
+    difficulty: 2,
+    category: "hooks",
+    tags: ["主题", "hooks", "自定义Hook", "系统同步"],
+    lastUpdated: new Date().toISOString(),
+  },
+  {
+    id: "use-media-query",
+    title: "使用 useMediaQuery 实现响应式设计",
+    description:
+      "学习如何使用自定义 Hook 实现响应式设计，包括媒体查询监听、设备特性检测等功能。",
+    difficulty: 2,
+    category: "hooks",
+    tags: ["响应式", "媒体查询", "自定义Hook", "设备特性"],
+    lastUpdated: new Date().toISOString(),
+  },
 ];

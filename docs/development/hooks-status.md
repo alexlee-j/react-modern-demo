@@ -21,10 +21,11 @@
 
 ## 自定义 Hooks
 
-- [ ] useLocalStorage
-- [ ] useTheme
-- [ ] useMediaQuery
+- [x] useLocalStorage
+- [x] useTheme
+- [x] useMediaQuery
 - [ ] useWindowSize
+
 
 ## 详细进度
 
@@ -153,3 +154,22 @@
   - 服务端渲染兼容
   - 性能考虑
   - 错误处理
+
+### useMediaQuery ✅
+
+- 基础示例完成
+  -  响应式布局示例
+  -  暗色模式切换
+  -  设备特性检测
+- 性能优化完成
+  -  防抖优化
+  -  事件监听优化
+  -  依赖管理
+- 文档完善
+  -  API 说明
+  -  使用场景
+  -  最佳实践
+- 测试计划
+  -  浏览器兼容性测试
+  -  性能测试
+  -  边界条件测试

@@ -40,9 +40,9 @@
    ```bash
    src/app/lab/[example-id]/
    ├── demo/
-   │   └── page.tsx      # 示例组件
+   │   └── xxxx.tsx      # 示例组件
    ├── docs/
-   │   └── content.mdx   # 示例文档
+   │   └── xxxx.mdx   # 示例文档
    └── page.tsx          # 布局组件
    ```
 

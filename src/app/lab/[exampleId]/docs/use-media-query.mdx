@@ -1,0 +1,203 @@
+---
+title: useMediaQuery
+description: 响应式设计和媒体查询的最佳实践
+---
+
+# useMediaQuery Hook
+
+`useMediaQuery` 是一个用于响应式设计的自定义 Hook，它能够帮助我们监听和响应媒体查询的变化，使组件能够适应不同的屏幕尺寸和设备特性。
+
+## 基础用法
+
+```tsx
+import { useMediaQuery } from '@/hooks/use-media-query';
+
+function ResponsiveComponent() {
+  const isMobile = useMediaQuery('(max-width: 768px)');
+  const isTablet = useMediaQuery('(min-width: 769px) and (max-width: 1024px)');
+  const isDesktop = useMediaQuery('(min-width: 1025px)');
+
+  return (
+    <div>
+      {isMobile && <div>移动端布局</div>}
+      {isTablet && <div>平板布局</div>}
+      {isDesktop && <div>桌面布局</div>}
+    </div>
+  );
+}
+```
+
+## API 说明
+
+### 参数
+
+```typescript
+interface UseMediaQueryOptions {
+  debounce?: boolean;      // 是否启用防抖
+  debounceDelay?: number;  // 防抖延迟时间（毫秒）
+}
+
+function useMediaQuery(query: string, options?: UseMediaQueryOptions): boolean;
+```
+
+- `query`: 媒体查询字符串，遵循标准的 CSS 媒体查询语法
+- `options`: 可选配置项
+  - `debounce`: 是否启用防抖优化
+  - `debounceDelay`: 防抖延迟时间，默认 300ms
+
+### 返回值
+
+- `boolean`: 当前媒体查询是否匹配
+
+## 高级用法
+
+### 1. 暗色模式检测
+
+```tsx
+function DarkModeExample() {
+  const prefersDark = useMediaQuery('(prefers-color-scheme: dark)');
+
+  return (
+    <div className={prefersDark ? 'dark' : 'light'}>
+      当前主题：{prefersDark ? '暗色' : '亮色'}
+    </div>
+  );
+}
+```
+
+### 2. 设备特性检测
+
+```tsx
+function DeviceFeatures() {
+  const isHoverDevice = useMediaQuery('(hover: hover)');
+  const prefersReducedMotion = useMediaQuery('(prefers-reduced-motion)');
+
+  return (
+    <div>
+      <p>设备支持悬停: {isHoverDevice ? '是' : '否'}</p>
+      <p>用户偏好减少动画: {prefersReducedMotion ? '是' : '否'}</p>
+    </div>
+  );
+}
+```
+
+### 3. 响应式布局示例
+
+```tsx
+function ResponsiveLayout() {
+  const isWide = useMediaQuery('(min-width: 1024px)');
+  const [layout, setLayout] = useState<'grid' | 'list'>('grid');
+
+  useEffect(() => {
+    setLayout(isWide ? 'grid' : 'list');
+  }, [isWide]);
+
+  return (
+    <div className={layout === 'grid' ? 'grid grid-cols-2 gap-4' : 'space-y-4'}>
+      {/* 内容项 */}
+    </div>
+  );
+}
+```
+
+### 4. 打印媒体查询
+
+```tsx
+function PrintableComponent() {
+  const isPrinting = useMediaQuery('print');
+  
+  return (
+    <div>
+      <div className={isPrinting ? 'print-only' : 'screen-only'}>
+        {isPrinting ? '打印预览模式' : '屏幕显示模式'}
+      </div>
+      {!isPrinting && <button>打印</button>}
+    </div>
+  );
+}
+```
+
+### 5. 设备像素比检测
+
+```tsx
+function HighDPIComponent() {
+  const isRetina = useMediaQuery('(min-resolution: 2dppx)');
+  
+  return (
+    <img 
+      src={isRetina ? 'high-res.png' : 'normal-res.png'} 
+      alt="适配高分辨率"
+    />
+  );
+}
+```
+
+## 性能优化
+
+### 防抖处理
+
+对于频繁变化的媒体查询（如调整窗口大小），建议启用防抖优化：
+
+```tsx
+const isWide = useMediaQuery('(min-width: 1024px)', {
+  debounce: true,
+  debounceDelay: 500 // 设置适当的延迟时间
+});
+```
+
+### 条件渲染优化
+
+避免在媒体查询回调中进行复杂的状态更新或重渲染：
+
+```tsx
+// 推荐
+const isMobile = useMediaQuery('(max-width: 768px)');
+return isMobile ? <MobileView /> : <DesktopView />;
+
+// 不推荐
+const isMobile = useMediaQuery('(max-width: 768px)');
+useEffect(() => {
+  // 避免在这里进行复杂的状态更新
+  setComplexState(calculateNewState());
+}, [isMobile]);
+```
+
+## 最佳实践
+
+1. **合理使用断点**
+   - 使用一致的断点值
+   - 避免过多的断点嵌套
+   - 优先使用标准的断点范围
+
+2. **优化性能**
+   - 适时使用防抖
+   - 避免过多的媒体查询监听
+   - 合理组织组件结构
+
+3. **增强可维护性**
+   - 将媒体查询值统一管理
+   - 使用语义化的变量名
+   - 保持代码结构清晰
+
+4. **注意兼容性**
+   - 考虑浏览器支持情况
+   - 提供合适的降级方案
+   - 测试不同设备和平台
+
+5. **无障碍优化**
+   - 响应用户的无障碍偏好设置
+   - 提供适当的替代内容
+   - 确保内容在各种条件下可访问
+
+## 注意事项
+
+1. 避免在渲染过程中频繁切换媒体查询
+2. 考虑使用 CSS 媒体查询处理简单的样式变化
+3. 确保提供合适的默认值和降级方案
+4. 在服务端渲染时要特别注意处理
+
+## 相关资源
+
+- [MDN Media Queries](https://developer.mozilla.org/zh-CN/docs/Web/CSS/Media_Queries)
+- [响应式设计最佳实践](https://web.dev/responsive-web-design-basics/)
+- [使用 CSS 媒体查询优化移动体验](https://web.dev/optimize-for-mobile/)
