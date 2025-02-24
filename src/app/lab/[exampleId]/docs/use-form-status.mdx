@@ -1,0 +1,187 @@
+# useFormStatus Hook 详解 🎨
+
+## 基本概念
+
+useFormStatus 是 React 提供的一个用于处理表单提交状态的 Hook。它能够：
+
+- 🔄 追踪表单提交状态
+- ⚡ 提供加载状态反馈
+- 🎯 优化表单交互体验
+
+## 使用场景
+
+### 1. 表单提交状态管理
+
+当需要在表单提交过程中提供视觉反馈时：
+
+```jsx
+import { useFormStatus } from 'react-dom';
+
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  
+  return (
+    <button 
+      disabled={pending}
+      className={`btn ${pending ? 'opacity-50' : ''}`}
+    >
+      {pending ? '提交中...' : '提交'}
+    </button>
+  );
+}
+
+function Form() {
+  async function handleSubmit(formData) {
+    'use server';
+    await new Promise(resolve => setTimeout(resolve, 2000));
+  }
+
+  return (
+    <form action={handleSubmit}>
+      <input type="text" name="username" />
+      <SubmitButton />
+    </form>
+  );
+}
+```
+
+### 2. 加载状态指示
+
+在表单提交过程中显示加载动画：
+
+```jsx
+import { useFormStatus } from 'react-dom';
+
+function LoadingSpinner() {
+  const { pending } = useFormStatus();
+  
+  if (!pending) return null;
+  
+  return (
+    <div className="loading-spinner" role="status">
+      <div className="spinner-border">
+        <span className="sr-only">加载中...</span>
+      </div>
+    </div>
+  );
+}
+```
+
+### 3. 表单字段控制
+
+在提交过程中禁用表单字段：
+
+```jsx
+import { useFormStatus } from 'react-dom';
+
+function FormFields() {
+  const { pending } = useFormStatus();
+  
+  return (
+    <fieldset disabled={pending}>
+      <input type="text" name="username" placeholder="用户名" />
+      <input type="password" name="password" placeholder="密码" />
+      <select name="role">
+        <option value="user">普通用户</option>
+        <option value="admin">管理员</option>
+      </select>
+    </fieldset>
+  );
+}
+```
+
+## 性能考虑 ⚠️
+
+useFormStatus 的使用需要注意以下几点：
+
+1. 🎯 **组件粒度**: 将使用 useFormStatus 的组件尽可能小，避免不必要的重渲染
+2. 💡 **状态提升**: 不要在表单容器组件中直接使用，而是在专门的子组件中使用
+3. 🔄 **更新频率**: pending 状态的变化会触发组件重渲染，注意控制使用范围
+
+## 最佳实践
+
+### 1. 组件分离
+
+```jsx
+// ✅ 好：将状态组件分离
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  return <button disabled={pending}>提交</button>;
+}
+
+// ❌ 差：在表单组件中直接使用
+function Form() {
+  const { pending } = useFormStatus(); // 这样使用是错误的
+  return <form>...</form>;
+}
+```
+
+### 2. 错误处理
+
+```jsx
+function FormWithErrorHandling() {
+  const { pending } = useFormStatus();
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!pending && error) {
+      toast.error(error);
+    }
+  }, [pending, error]);
+
+  return <form>...</form>;
+}
+```
+
+### 3. 可访问性
+
+```jsx
+function AccessibleForm() {
+  const { pending } = useFormStatus();
+  
+  return (
+    <form aria-busy={pending}>
+      <button
+        aria-disabled={pending}
+        disabled={pending}
+      >
+        提交
+      </button>
+    </form>
+  );
+}
+```
+
+## 常见问题
+
+### Q1: 为什么我的 useFormStatus 总是返回 undefined？
+
+A: useFormStatus 只能在表单组件内部使用，并且必须是由 form action 触发的提交操作。确保你的组件是作为 form 元素的子组件。
+
+### Q2: useFormStatus 和 useState 有什么区别？
+
+A: useFormStatus 专门用于处理表单提交状态，而 useState 是通用的状态管理 Hook。useFormStatus 会自动跟踪表单的提交状态，不需要手动更新。
+
+### Q3: 如何在服务器组件中使用 useFormStatus？
+
+A: useFormStatus 是一个客户端 Hook，不能在服务器组件中直接使用。你需要将使用 useFormStatus 的逻辑抽离到客户端组件中。
+
+### Q4: 如何优化使用 useFormStatus 的性能？
+
+A: 优化 useFormStatus 性能的关键点：
+1. 将使用 useFormStatus 的组件尽可能小，避免不必要的重渲染
+2. 不要在表单容器组件中直接使用
+3. 使用 memo 优化子组件
+4. 避免在 pending 状态变化时进行复杂计算
+
+## 相关资源
+
+- [React 官方文档：useFormStatus](https://react.dev/reference/react-dom/hooks/useFormStatus)
+- [表单处理最佳实践](https://react.dev/learn/managing-form-state)
+- [React Server Actions](https://react.dev/reference/react/use-server)
+
+## 下一步学习
+
+- useOptimistic：学习如何实现乐观更新
+- useTransition：了解如何处理状态转换
+- Server Actions：深入学习服务器端操作

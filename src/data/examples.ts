@@ -208,4 +208,14 @@ export const examples: ExampleCard[] = [
     tags: ["Promise", "数据获取", "资源加载", "hooks", "react"],
     lastUpdated: new Date().toISOString(),
   },
+  {
+    id: "use-form-status",
+    title: "理解 useFormStatus 钩子",
+    description:
+      "学习如何使用 useFormStatus 钩子处理表单提交状态，包括加载状态、错误反馈和交互优化等场景。",
+    difficulty: 3,
+    category: "hooks",
+    tags: ["表单", "状态管理", "hooks", "react"],
+    lastUpdated: new Date().toISOString(),
+  },
 ];

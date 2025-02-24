@@ -9,7 +9,7 @@
 - [x] useCallback - 函数记忆化
 - [x] useMemo - 值记忆化
 - [x] useRef - DOM 引用和值持久化
-- [ ] use - 数据获取和 Promise 处理
+- [x] use - 数据获取和 Promise 处理
 
 ## 进阶 Hooks
 
