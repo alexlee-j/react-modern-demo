@@ -34,14 +34,14 @@ const ExamplePage: React.FC<ExamplePageProps> = ({ params }) => {
   });
 
   return (
-    <div className="flex min-h-screen">
-      {/* 左侧实时演示 */}
-      <div className="w-1/2 p-4 border-r overflow-y-auto">
+    <div className="flex flex-col md:flex-row min-h-screen">
+      {/* 实时演示区域 */}
+      <div className="w-full md:w-1/2 p-4 border-b md:border-b-0 md:border-r overflow-y-auto">
         <DemoComponent />
       </div>
 
-      {/* 右侧同步文档 */}
-      <div className="w-1/2 p-4 overflow-y-auto">
+      {/* 文档区域 */}
+      <div className="w-full md:w-1/2 p-4 overflow-y-auto">
         <MDXProvider components={MDXComponents}>
           <article className="prose prose-base prose-neutral dark:prose-invert max-w-none">
             <DocsComponent />
