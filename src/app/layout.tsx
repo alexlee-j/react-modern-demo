@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import React from 'react';
 import "./globals.css";
 import { ThemeProvider } from "@/hooks/use-theme";
+import { ExampleStateProvider } from './ExampleStateProvider';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,20 +30,14 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Layout>
-          {children}
-        </Layout>
+        <ThemeProvider defaultTheme="system" storageKey="theme">
+          <ExampleStateProvider>
+            <div className="portal-layout">
+              <main>{children}</main>
+            </div>
+          </ExampleStateProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
 }
-
-const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return (
-    <ThemeProvider defaultTheme="system" storageKey="theme">
-      <div className="portal-layout">
-        <main>{children}</main>
-      </div>
-    </ThemeProvider>
-  );
-};

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useEffect, useCallback, useMemo, useContext } from 'react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
@@ -14,6 +14,7 @@ import { fetchExamples } from '@/services/api';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
+import { ExampleContext } from './ExampleStateProvider';
 
 interface ExampleCardComponentProps {
   example: ExampleCard;
@@ -81,10 +82,12 @@ const LoadingCard = () => (
 const ITEMS_PER_PAGE = 6;
 
 const Page: React.FC = () => {
-  const [currentPage, setCurrentPage] = React.useState(1);
-  const [search, setSearch] = React.useState('');
-  const [difficulty, setDifficulty] = React.useState(Difficulty.All);
-  const [category, setCategory] = React.useState(Category.All);
+  const context = useContext(ExampleContext);
+  if (!context) {
+    throw new Error('Page must be used within ExampleStateProvider');
+  }
+  const { currentPage, search, difficulty, category, setCurrentPage, setSearch, setDifficulty, setCategory } = context;
+  
   const [loading, setLoading] = React.useState(false);
   const [examples, setExamples] = React.useState<ExampleCard[]>([]);
   const [totalPages, setTotalPages] = React.useState(0);
@@ -100,7 +103,7 @@ const Page: React.FC = () => {
         setCurrentPage(1);
       }, 300);
     };
-  }, []);
+  }, [setSearch, setCurrentPage]);
 
   // 加载数据
   const loadExamples = React.useCallback(async () => {
