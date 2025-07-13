@@ -30,7 +30,7 @@ const measureTime = (fn: () => any): [any, number] => {
 
 // 斐波那契数列计算函数（模拟耗时计算）
 const calculateFibonacci = (n: number): number => {
-  // 添加适量的额外计算
+  // 添加适量额外计算
   const complexCalculation = (x: number): number => {
     let result = 0;
     for (let i = 0; i < 100; i++) {
@@ -268,7 +268,7 @@ const NumberListDemo = () => {
               role="list"
               aria-label="过滤和排序后的数字列表"
             >
-              {processedData.sorted.map((num) => (
+              {processedData.sorted.map((num: number) => (
                 <Badge
                   key={num}
                   variant="secondary"

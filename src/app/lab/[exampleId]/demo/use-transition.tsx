@@ -45,7 +45,7 @@ const usePerformanceMonitor = () => {
       const endTime = performance.now();
       setMetrics({
         renderTime: endTime - startTime,
-        memoryUsage: performance.memory?.usedJSHeapSize || 0,
+        memoryUsage: (performance as any).memory?.usedJSHeapSize || 0,
       });
     };
     return cleanup;

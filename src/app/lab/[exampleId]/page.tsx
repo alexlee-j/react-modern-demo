@@ -17,20 +17,18 @@ const ExamplePage: React.FC<ExamplePageProps> = ({ params }) => {
   const { exampleId } = use(params);
 
   // 动态导入示例组件和文档
-  const DemoComponent = dynamic(() => import(`./demo/${exampleId}`), {
+  const DemoComponent = dynamic(() => import(`./demo/${exampleId}`).catch(() => {
+    notFound();
+    return { default: () => null };
+  }), {
     loading: () => <div>加载示例组件中...</div>,
-    onError: () => {
-      notFound();
-      return null;
-    },
   });
 
-  const DocsComponent = dynamic(() => import(`./docs/${exampleId}.mdx`), {
+  const DocsComponent = dynamic(() => import(`./docs/${exampleId}.mdx`).catch(() => {
+    notFound();
+    return { default: () => null };
+  }), {
     loading: () => <div>加载文档中...</div>,
-    onError: () => {
-      notFound();
-      return null;
-    },
   });
 
   return (

@@ -196,7 +196,9 @@ const FocusExample = () => {
 // 上一次值记录示例
 const PreviousValueExample = () => {
   const [count, setCount] = useState(0);
-  const prevCountRef = useRef<number>();
+  const prevCountRef = useRef<number | undefined>(undefined);
+  // 或者直接初始化为数字
+  // const prevCountRef = useRef<number>(0);
   const [history, setHistory] = useState<string[]>([]);
 
   useEffect(() => {

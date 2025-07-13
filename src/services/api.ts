@@ -37,9 +37,9 @@ export const fetchExamples = async (params: ExamplesQueryParams): Promise<Pagina
     // 过滤逻辑
     let filteredExamples = examples.filter(example => {
       const matchesSearch = !params.search || 
-        example.title.toLowerCase().includes(params.search.toLowerCase()) ||
-        example.description.toLowerCase().includes(params.search.toLowerCase()) ||
-        example.tags.some(tag => tag.toLowerCase().includes(params.search.toLowerCase()));
+        example.title.toLowerCase().includes(params.search!.toLowerCase()) ||
+        example.description.toLowerCase().includes(params.search!.toLowerCase()) ||
+        example.tags.some(tag => tag.toLowerCase().includes(params.search!.toLowerCase()));
       
       const matchesDifficulty = !params.difficulty || 
         params.difficulty === Difficulty.All || 
