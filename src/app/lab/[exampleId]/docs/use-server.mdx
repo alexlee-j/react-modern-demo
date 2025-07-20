@@ -1,0 +1,97 @@
+# 使用服务器组件和服务器操作
+
+服务器组件（Server Components）和服务器操作（Server Actions）是 Next.js 13+ 引入的重要特性，它们允许在服务器上直接执行代码，提高性能并增强安全性。
+
+## 核心概念
+
+### 服务器组件
+
+- **在服务器上渲染**：组件的 JSX 在服务器上生成 HTML，然后发送到客户端
+- **无客户端 JavaScript**：服务器组件不会向客户端发送 JavaScript 代码
+- **安全的数据获取**：可以直接在组件中使用 API 密钥和敏感信息进行数据获取
+- **减少客户端 bundle 大小**：降低应用加载时间
+
+### 服务器操作
+
+- **服务器端表单处理**：直接在服务器上处理表单提交
+- **数据修改**：安全地执行创建、更新、删除操作
+- **无需 API 路由**：简化数据交互流程
+- **渐进式增强**：即使禁用 JavaScript 也能工作
+
+## 基本用法
+
+### 创建服务器组件
+
+```tsx
+// ServerComponent.tsx - 没有 'use client' 指令
+async function ServerComponent() {
+  // 直接在服务器上获取数据
+  const data = await fetch('https://api.example.com/data');
+  const items = await data.json();
+
+  return (
+    <ul>
+      {items.map(item => (
+        <li key={item.id}>{item.name}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+### 创建服务器操作
+
+```tsx
+// actions.ts
+'use server';
+
+export async function submitForm(formData: FormData) {
+  // 服务器端表单处理逻辑
+  const username = formData.get('username');
+  // 数据库操作...
+  return { success: true };
+}
+```
+
+```tsx
+// ClientComponent.tsx
+'use client';
+
+import { useFormState } from 'react-dom';
+import { submitForm } from './actions';
+
+export default function ClientComponent() {
+  const [state, formAction] = useFormState(submitForm, { success: false });
+
+  return (
+    <form action={formAction}>
+      <input type="text" name="username" />
+      <button type="submit">提交</button>
+      {state.success && <p>提交成功！</p>}
+    </form>
+  );
+}
+```
+
+## 最佳实践
+
+1. **合理划分组件**：
+   - 服务器组件：数据获取、静态内容、敏感操作
+   - 客户端组件：交互元素、状态管理
+
+2. **数据获取**：
+   - 使用服务器组件进行初始数据获取
+   - 利用 Next.js 的缓存机制优化性能
+
+3. **错误处理**：
+   - 对服务器操作使用 try/catch
+   - 提供清晰的用户反馈
+
+4. **安全性**：
+   - 始终验证服务器操作的输入
+   - 利用服务器组件保护敏感逻辑
+
+## 相关资源
+
+- <mcurl name="Next.js 服务器组件文档" url="https://nextjs.org/docs/app/building-your-application/rendering/server-components"></mcurl>
+- <mcurl name="Next.js 服务器操作文档" url="https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations"></mcurl>
