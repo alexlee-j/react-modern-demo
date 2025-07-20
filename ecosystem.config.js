@@ -2,7 +2,7 @@ module.exports = {
   apps: [{
     name: "react-modern-demo",
     script: "node_modules/next/dist/bin/next", // 直接调用Next.js二进制文件
-    args: "start --port 80", // 明确指定端口
+    args: "start --port 8080", // 明确指定端口
     instances: "max", // 使用所有可用CPU核心
     exec_mode: "cluster", // 启用集群模式提高性能
     env: {
