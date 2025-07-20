@@ -1,0 +1,73 @@
+---
+exampleId: suspense-data
+title: "使用 Suspense 实现数据加载"
+description: "探索 Suspense 新模式，用于处理异步数据加载。"
+difficulty: 4
+category: "patterns"
+tags: ["suspense", "异步", "加载"]
+relatedComponents:
+  - /app/lab/[exampleId]/demo/suspense-data
+dependencies:
+  - react@19.0.0
+---
+
+# 使用 Suspense 实现数据加载
+
+## 什么是 Suspense？
+
+Suspense 是 React 中的一个组件，它允许你在组件树中等待某个异步操作完成，同时显示一个加载状态。这对于处理数据加载、组件懒加载等场景非常有用。
+
+## 工作原理
+
+Suspense 的工作原理是捕获组件抛出的 promise，然后显示一个 fallback 组件，直到 promise 被解决。当 promise 解决后，Suspense 会重新渲染子组件。
+
+## 基本用法
+
+```tsx
+import React, { Suspense } from 'react';
+
+// 假设这是一个异步加载的组件
+const AsyncComponent = () => {
+  // 组件逻辑...
+};
+
+const App = () => {
+  return (
+    <Suspense fallback={<div>加载中...</div>}>
+      <AsyncComponent />
+    </Suspense>
+  );
+};
+```
+
+## 数据加载示例
+
+在我们的示例中，我们展示了如何使用 Suspense 处理异步数据加载：
+
+1. 我们创建了一个 `fetchData` 函数来模拟异步数据获取
+2. 我们创建了一个 `DataFetcher` 组件来使用这个函数
+3. 我们使用 Suspense 包装这个组件，并提供一个加载状态
+
+## 最佳实践
+
+1. **结合错误边界使用**
+   - 错误边界可以捕获 Suspense 中的错误
+   - 提供更好的用户体验
+
+2. **合理设置加载状态**
+   - 加载状态应该简洁明了
+   - 避免过度设计的加载动画
+
+3. **避免嵌套过深的 Suspense**
+   - 嵌套过深的 Suspense 会使代码难以维护
+   - 考虑使用组合而不是嵌套
+
+4. **使用缓存**
+   - 对于频繁请求的数据，考虑使用缓存
+   - 避免不必要的重复请求
+
+## 相关资源
+
+- [React 官方文档 - Suspense](https://react.dev/reference/react/Suspense)
+- [React 数据加载最佳实践](https://react.dev/learn/loading-data)
+- [React 并发渲染](https://react.dev/learn/concurrent-rendering)
