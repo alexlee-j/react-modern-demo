@@ -12,6 +12,12 @@ const withMDXPlugin = withMDX({
 
 // Create Next.js config with experimental features
 const nextConfig: NextConfig = {
+  reactStrictMode: true,
+  swcMinify: true,
+  images: {
+    domains: [], // 添加您使用的图片域名
+    formats: ['image/avif', 'image/webp'],
+  },
   experimental: {
     mdxRs: true, // Enable Rust compiler for MDX
   },
